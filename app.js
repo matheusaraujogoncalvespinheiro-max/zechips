@@ -279,6 +279,7 @@ function toggleChangeField() {
 // --- Order Placement ---
 function placeOrder() {
     const name = document.getElementById('customer-name').value;
+    const phone = document.getElementById('customer-phone').value;
     const orderType = document.getElementById('order-type').value;
     const location = document.getElementById('delivery-location').value;
     const table = document.getElementById('table-number').value;
@@ -286,6 +287,7 @@ function placeOrder() {
     const changeFor = document.getElementById('payment-change').value;
 
     if (!name) return alert("Por favor, digite seu nome!");
+    if (!phone) return alert("Por favor, informe seu WhatsApp!");
     if (orderType === 'Entrega' && !table) return alert("Por favor, informe a mesa ou complemento!");
     
     const orderCode = '#' + Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -297,6 +299,7 @@ function placeOrder() {
     const newOrder = {
         code: orderCode,
         customer: name,
+        phone: phone,
         type: orderType,
         location: orderType === 'Entrega' ? location : 'Retirada',
         table: table || '-',

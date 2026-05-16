@@ -89,6 +89,12 @@ function renderAdminOrders() {
                     <button class="action-btn" style="background: #4caf50;" onclick="updateStatus('${order.code}', 'Pronto')">Pronto</button>
                     <button class="action-btn" style="background: #2196f3;" onclick="updateStatus('${order.code}', 'Entregue')">Entregar</button>
                 ` : `<span style="color: var(--text-muted); font-size: 0.8rem;">Concluído</span>`}
+                
+                ${order.phone ? `
+                    <button class="action-btn" style="background: #25D366; margin-top: 0.5rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px;" onclick="sendWhatsApp('${order.code}')">
+                        <span style="font-size: 1.1rem;">💬</span> WhatsApp
+                    </button>
+                ` : ''}
             </td>
         </tr>
     `).join('');
@@ -103,6 +109,22 @@ function updateStatus(code, newStatus) {
         renderAdminOrders();
         updateStats();
     }
+}
+
+function sendWhatsApp(code) {
+    const orders = getOrders();
+    const order = orders.find(o => o.code === code);
+    if (!order || !order.phone) return alert("Pedido ou telefone não encontrado!");
+
+    const itemsList = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+    const message = `Olá *${order.customer}*! Seu pedido *${order.code}* no Ze Chips já está **PRONTO**! ✅\n\n📦 *Detalhes:* ${itemsList}\n💰 *Total:* R$ ${order.total.toFixed(2).replace('.', ',')}\n\nPode vir retirar ou aguardar a entrega!`;
+    
+    // Clean phone number (keep only digits)
+    const cleanPhone = order.phone.replace(/\D/g, '');
+    const finalPhone = cleanPhone.length <= 11 ? '55' + cleanPhone : cleanPhone;
+    
+    const waUrl = `https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
 }
 
 function updateStats() {
