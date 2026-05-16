@@ -13,7 +13,6 @@
             <nav class="nav-links">
                 <button class="nav-btn active" onclick="showView('menu')">Cardápio</button>
                 <button class="nav-btn" onclick="showView('my-orders')">Meus Pedidos</button>
-                <button class="nav-btn" onclick="showView('track')">Acompanhar</button>
             </nav>
         </header>
 
@@ -109,7 +108,7 @@
             </div>
         </section>
 
-        <!-- View: Acompanhar Pedido -->
+        <!-- View: Acompanhar Pedido (REMOVED - Integrated into My Orders) -->
 ...
     <!-- Cart Overlay -->
     <div id="cart-overlay" class="cart-overlay">
@@ -175,6 +174,17 @@
         </div>
     </div>
 
+    <!-- Order Details Overlay -->
+    <div id="order-details-overlay" class="cart-overlay" style="display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.98);">
+        <div class="status-card" style="width: 95%; max-width: 500px; padding: 2rem; position: relative;">
+            <button class="nav-btn" onclick="closeOrderDetails()" style="position: absolute; top: 1rem; right: 1rem;">✕</button>
+            
+            <div id="details-content">
+                <!-- Details will be injected here -->
+            </div>
+        </div>
+    </div>
+
     <script src="shared.js"></script>
     <script src="app.js"></script>
 
@@ -187,10 +197,6 @@
         <button class="mobile-nav-btn" id="m-btn-my-orders" onclick="showView('my-orders')">
             <span>📋</span>
             Pedidos
-        </button>
-        <button class="mobile-nav-btn" id="m-btn-track" onclick="showView('track')">
-            <span>🚚</span>
-            Status
         </button>
         <button class="mobile-nav-btn" id="m-btn-cart" onclick="toggleCart()" style="position: relative;">
             <span>🛒</span>

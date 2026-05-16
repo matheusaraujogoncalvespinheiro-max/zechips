@@ -105,7 +105,7 @@ function renderMyOrders() {
     container.innerHTML = myOrders.reverse().map(order => {
         const total = order.items.reduce((acc, i) => acc + (i.price * i.qty), 0);
         return `
-            <div class="food-card" style="margin-bottom: 1.5rem; padding: 1.8rem; cursor: pointer; transition: var(--transition);" onclick="quickTrack('${order.code}')">
+            <div class="food-card" style="margin-bottom: 1.5rem; padding: 1.8rem; cursor: pointer; transition: var(--transition);" onclick="showOrderDetails('${order.code}')">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                     <div>
                         <div style="font-weight: 800; color: var(--primary); font-size: 1.4rem; letter-spacing: 2px;">${order.code}</div>
@@ -116,10 +116,10 @@ function renderMyOrders() {
                 
                 <div style="border-top: 1px solid var(--glass-border); padding-top: 1rem; margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
                     <div style="font-size: 0.9rem; color: var(--text-muted);">
-                        ${order.items.map(i => `${i.qty}x ${i.name}`).join(', ')}
+                        ${order.items.length} itens no pedido
                     </div>
                     <div style="font-weight: 800; color: var(--text-main); font-size: 1.1rem;">
-                        R$ ${total.toFixed(2).replace('.', ',')}
+                        R$ ${order.total.toFixed(2).replace('.', ',')}
                     </div>
                 </div>
             </div>
@@ -127,10 +127,55 @@ function renderMyOrders() {
     }).join('');
 }
 
-function quickTrack(code) {
-    showView('track');
-    document.getElementById('track-code-input').value = code;
-    trackOrder(code);
+function showOrderDetails(code) {
+    const orders = getOrders();
+    const order = orders.find(o => o.code === code);
+    if (!order) return;
+
+    const overlay = document.getElementById('order-details-overlay');
+    const content = document.getElementById('details-content');
+    
+    const itemsHtml = order.items.map(i => `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+            <span>${i.qty}x ${i.name}</span>
+            <span>R$ ${(i.price * i.qty).toFixed(2).replace('.', ',')}</span>
+        </div>
+    `).join('');
+
+    content.innerHTML = `
+        <h2 style="color: var(--primary); margin-bottom: 0.5rem;">Pedido ${order.code}</h2>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">${new Date(order.timestamp).toLocaleString('pt-BR')}</div>
+        
+        <div style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span>Status:</span>
+                <span class="status-badge status-${order.status.toLowerCase()}">${order.status}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Pagamento:</span>
+                <span style="font-weight: 600;">${order.payment} ${order.status === 'Cancelado' ? '(Cancelado)' : ''}</span>
+            </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: left;">
+            <h4 style="margin-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;">Itens</h4>
+            ${itemsHtml}
+            <div style="border-top: 1px solid var(--glass-border); margin-top: 0.8rem; padding-top: 0.8rem; display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem;">
+                <span>Total:</span>
+                <span>R$ ${order.total.toFixed(2).replace('.', ',')}</span>
+            </div>
+        </div>
+
+        ${order.status !== 'Entregue' && order.status !== 'Cancelado' ? `
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Fique de olho aqui para ver quando o status mudar!</div>
+        ` : ''}
+    `;
+
+    overlay.style.display = 'flex';
+}
+
+function closeOrderDetails() {
+    document.getElementById('order-details-overlay').style.display = 'none';
 }
 
 // --- Cart Logic ---
