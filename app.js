@@ -322,25 +322,94 @@ function placeOrder() {
     updateCartCount();
     renderCart();
     
-    // Show Success Message
+    // Show Success/Pix Message
     const overlay = document.getElementById('success-overlay');
+    const pixArea = document.getElementById('pix-payment-area');
+    const successArea = document.getElementById('success-message-area');
     const codeDisplay = document.getElementById('success-order-code');
     const progress = document.getElementById('success-progress');
     
     codeDisplay.innerText = orderCode;
     overlay.style.display = 'flex';
     overlay.style.right = '0'; // Open the overlay
-    
-    // Animate progress bar
-    setTimeout(() => {
-        progress.style.width = '0%';
-    }, 100);
 
-    // Auto Redirect after 10s
-    setTimeout(() => {
-        overlay.style.display = 'none';
+    if (paymentMethod === 'Pix') {
+        pixArea.style.display = 'block';
+        successArea.style.display = 'none';
+        generatePixPayment(newOrder.total);
+        startPixTimer(600, orderCode); // 10 minutes
+    } else {
+        pixArea.style.display = 'none';
+        successArea.style.display = 'block';
+        
+        // Animate progress bar
+        setTimeout(() => {
+            progress.style.width = '0%';
+        }, 100);
+
+        // Auto Redirect after 10s
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            showView('my-orders');
+        }, 10000);
+    }
+}
+
+// --- Pix Helper Functions ---
+function generatePixPayment(amount) {
+    // Placeholder Pix Data - REPLACE WITH REAL DATA
+    const pixKey = "SUA-CHAVE-PIX-AQUI"; // e.g. "12345678900"
+    const name = "ZE CHIPS";
+    const city = "SAO PAULO";
+    
+    // Simple Pix Payload Generator (Simplified version)
+    const formattedAmount = amount.toFixed(2);
+    const payload = `00020126330014BR.GOV.BCB.PIX0111${pixKey}520400005303986540${formattedAmount.length.toString().padStart(2, '0')}${formattedAmount}5802BR5908${name}6009${city}62070503***6304`;
+    
+    // Note: A real Pix QR needs a CRC16 at the end. For this demo, we'll use a simplified payload
+    // and a QR code API.
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payload)}`;
+    
+    document.getElementById('pix-qr-code').src = qrUrl;
+    document.getElementById('pix-payload-input').value = payload;
+}
+
+function copyPixPayload() {
+    const input = document.getElementById('pix-payload-input');
+    input.select();
+    document.execCommand('copy');
+    alert("Código Pix copiado!");
+}
+
+let pixInterval;
+function startPixTimer(seconds, orderCode) {
+    clearInterval(pixInterval);
+    let timeLeft = seconds;
+    const timerEl = document.getElementById('pix-timer');
+
+    pixInterval = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const secs = timeLeft % 60;
+        timerEl.innerText = `${minutes}:${secs.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 0) {
+            clearInterval(pixInterval);
+            cancelOrderForNonPayment(orderCode);
+        }
+        timeLeft--;
+    }, 1000);
+}
+
+function cancelOrderForNonPayment(code) {
+    const orders = getOrders();
+    const order = orders.find(o => o.code === code);
+    if (order && order.status === 'Recebido') {
+        order.status = 'Cancelado';
+        saveOrders(orders);
+        alert("O tempo para pagamento expirou e seu pedido foi cancelado.");
+        document.getElementById('success-overlay').style.display = 'none';
         showView('my-orders');
-    }, 10000);
+    }
 }
 
 // --- Tracking Logic ---

@@ -134,9 +134,33 @@
         <div id="cart-count">0</div>
     </div>
 
-    <!-- Success Overlay -->
-    <div id="success-overlay" class="cart-overlay" style="display: none; align-items: center; justify-content: center; text-align: center; background: rgba(0,0,0,0.95);">
-        <div class="status-card" style="max-width: 400px; animation: slideUp 0.5s ease-out;">
+    <!-- Success/Pix Overlay -->
+    <div id="success-overlay" class="cart-overlay" style="display: none; align-items: center; justify-content: center; text-align: center; background: rgba(0,0,0,0.98); overflow-y: auto;">
+        <div id="pix-payment-area" style="display: none; width: 100%; max-width: 450px; animation: slideUp 0.5s ease-out;">
+            <h2 style="color: var(--primary); margin-bottom: 0.5rem;">Pagamento via Pix</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Pague agora para confirmar seu pedido</p>
+            
+            <div style="background: white; padding: 1.5rem; border-radius: 24px; display: inline-block; margin-bottom: 1.5rem; box-shadow: 0 0 40px var(--primary-glow);">
+                <img id="pix-qr-code" src="" alt="QR Code Pix" style="width: 220px; height: 220px; display: block;">
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Tempo restante para pagar:</div>
+                <div id="pix-timer" style="font-size: 2.5rem; font-weight: 800; color: var(--accent-red); letter-spacing: 2px;">10:00</div>
+            </div>
+
+            <div class="form-group" style="text-align: left;">
+                <label>Pix Copia e Cola</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="pix-payload-input" readonly style="font-size: 0.8rem; background: rgba(255,255,255,0.05);">
+                    <button class="nav-btn active" onclick="copyPixPayload()" style="padding: 0 1.5rem; border-radius: 12px;">Copiar</button>
+                </div>
+            </div>
+
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2rem;">Após o pagamento, seu pedido será processado automaticamente.</p>
+        </div>
+
+        <div id="success-message-area" style="display: none; max-width: 400px; animation: slideUp 0.5s ease-out;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
             <h2 style="color: var(--primary); margin-bottom: 1rem;">Pedido Confirmado!</h2>
             <p style="font-size: 1.1rem; line-height: 1.6;">Seu pedido já está sendo feito a produção!</p>
