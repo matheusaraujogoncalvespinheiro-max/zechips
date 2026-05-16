@@ -357,10 +357,10 @@ function placeOrder() {
 
 // --- Pix Helper Functions ---
 function generatePixPayment(amount) {
-    // Placeholder Pix Data - REPLACE WITH REAL DATA
-    const pixKey = "SUA-CHAVE-PIX-AQUI"; // e.g. "12345678900"
-    const name = "ZE CHIPS";
-    const city = "SAO PAULO";
+    // REAL Pix Data
+    const pixKey = "07881389109"; 
+    const name = "MATHEUS ARAUJO GONCALVES PINHEIRO";
+    const city = "BRASIL";
     
     // Simple Pix Payload Generator (Simplified version)
     const formattedAmount = amount.toFixed(2);
