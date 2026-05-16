@@ -135,7 +135,15 @@ function quickTrack(code) {
 
 // --- Cart Logic ---
 function toggleCart() {
-    document.getElementById('cart-overlay').classList.toggle('open');
+    const cartOverlay = document.getElementById('cart-overlay');
+    cartOverlay.classList.toggle('open');
+    
+    // Toggle body scroll
+    if (cartOverlay.classList.contains('open')) {
+        document.body.classList.add('no-scroll');
+    } else {
+        document.body.classList.remove('no-scroll');
+    }
 }
 
 function addToCart(id) {

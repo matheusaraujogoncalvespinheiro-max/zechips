@@ -31,6 +31,10 @@ body {
     color-scheme: dark; /* Helps with native UI like selects */
 }
 
+body.no-scroll {
+    overflow: hidden;
+}
+
 /* --- Select Styling Fix --- */
 select option {
     background-color: #1a1a1a;
@@ -242,7 +246,7 @@ header {
     background: rgba(10, 10, 10, 0.8);
     backdrop-filter: blur(25px);
     box-shadow: -20px 0 50px rgba(0,0,0,0.8);
-    z-index: 1000;
+    z-index: 2000; /* Higher than mobile nav */
     padding: 2.5rem;
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
@@ -474,18 +478,38 @@ input:focus {
         display: flex;
         flex-direction: row;
         align-items: center;
-        height: 140px;
+        min-height: 140px;
+        height: auto;
     }
 
     .food-img {
-        width: 120px;
-        height: 100%;
+        width: 110px;
+        min-width: 110px;
+        height: 140px;
         border-radius: 20px 0 0 20px;
     }
 
     .food-content {
         padding: 1rem;
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .food-desc {
+        margin-bottom: 1rem;
+        height: auto;
+        -webkit-line-clamp: 1;
+    }
+
+    .add-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .price {
+        font-size: 1.2rem;
     }
 
     .food-title {
@@ -495,6 +519,12 @@ input:focus {
     .cart-overlay {
         width: 100%;
         right: -100%;
+        padding: 1.5rem;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom) + 2rem); /* Clear mobile nav */
+    }
+
+    .cart-footer {
+        padding-bottom: 2rem;
     }
 
     .view h1 {
