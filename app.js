@@ -364,14 +364,60 @@ function generatePixPayment(amount) {
     
     // Simple Pix Payload Generator (Simplified version)
     const formattedAmount = amount.toFixed(2);
-    const payload = `00020126330014BR.GOV.BCB.PIX0111${pixKey}520400005303986540${formattedAmount.length.toString().padStart(2, '0')}${formattedAmount}5802BR5908${name}6009${city}62070503***6304`;
     
-    // Note: A real Pix QR needs a CRC16 at the end. For this demo, we'll use a simplified payload
-    // and a QR code API.
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payload)}`;
+    // Pix structure with dynamic lengths
+    let payload = "00020126";
+    const merchantAccount = `0014BR.GOV.BCB.PIX01${pixKey.length.toString().padStart(2, '0')}${pixKey}`;
+    payload += `${merchantAccount.length.toString().padStart(2, '0')}${merchantAccount}`;
+    payload += "520400005303986";
+    payload += `54${formattedAmount.length.toString().padStart(2, '0')}${formattedAmount}`;
+    payload += "5802BR";
+    payload += `59${name.length.toString().padStart(2, '0')}${name}`;
+    payload += `60${city.length.toString().padStart(2, '0')}${city}`;
+    payload += "62070503***";
+    payload += "6304"; // Start of CRC
+
+    // Calculate CRC16
+    const crc = calculateCRC16(payload);
+    payload += crc.toUpperCase();
+    
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payload)}`;
     
     document.getElementById('pix-qr-code').src = qrUrl;
     document.getElementById('pix-payload-input').value = payload;
+}
+
+function calculateCRC16(str) {
+    let crc = 0xFFFF;
+    const polynomial = 0x1021;
+
+    for (let i = 0; i < str.length; i++) {
+        let b = str.charCodeAt(i);
+        for (let j = 0; j < 8; j++) {
+            let bit = ((b >> (7 - j)) & 1) === 1;
+            let c15 = ((crc >> 15) & 1) === 1;
+            crc <<= 1;
+            if (c15 ^ bit) crc ^= polynomial;
+        }
+    }
+    return (crc & 0xFFFF).toString(16).padStart(4, '0');
+}
+
+function confirmPixPayment() {
+    clearInterval(pixInterval);
+    document.getElementById('pix-payment-area').style.display = 'none';
+    const successArea = document.getElementById('success-message-area');
+    successArea.style.display = 'block';
+    
+    const progress = document.getElementById('success-progress');
+    setTimeout(() => {
+        progress.style.width = '0%';
+    }, 100);
+
+    setTimeout(() => {
+        document.getElementById('success-overlay').style.display = 'none';
+        showView('my-orders');
+    }, 10000);
 }
 
 function copyPixPayload() {
