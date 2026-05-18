@@ -291,12 +291,18 @@ function renderFinance() {
     const transactions = [];
     
     incomeOrders.forEach(o => {
+        // Fix for old orders that might not have a total saved
+        let orderTotal = o.total;
+        if (orderTotal === undefined || isNaN(orderTotal)) {
+            orderTotal = o.items ? o.items.reduce((acc, i) => acc + ((i.price || 0) * (i.qty || 1)), 0) : 0;
+        }
+
         transactions.push({
             id: o.code,
             date: o.timestamp,
             type: 'in',
             desc: `Venda Pedido ${o.code}`,
-            value: o.total
+            value: orderTotal
         });
     });
 
