@@ -55,7 +55,7 @@ function renderMenu() {
     }
     
     container.innerHTML = filteredMenu.map(item => `
-        <div class="food-card">
+        <div class="food-card" style="cursor: pointer;" onclick="openProductDetails(${item.id})">
             <img src="${item.img}" alt="${item.name}" class="food-img">
             <div class="food-content">
                 <div style="font-size: 0.7rem; color: var(--primary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.3rem;">${item.category}</div>
@@ -63,7 +63,7 @@ function renderMenu() {
                 <p class="food-desc">${item.desc}</p>
                 <div class="food-footer">
                     <span class="price">R$ ${item.price.toFixed(2).replace('.', ',')}</span>
-                    <button class="add-btn" onclick="addToCart(${item.id})">Adicionar</button>
+                    <button class="add-btn" style="padding: 0.5rem 1rem; border-radius: 12px; font-size: 0.8rem; background: rgba(255,191,0,0.2); color: var(--primary);">Ver Mais</button>
                 </div>
             </div>
         </div>
@@ -83,6 +83,39 @@ function filterCategory(cat) {
     
     document.getElementById(activeBtn).classList.add('active');
     renderMenu();
+}
+
+// --- Product Details Modal ---
+function openProductDetails(id) {
+    const menu = getMenu();
+    const product = menu.find(p => p.id === id);
+    if (!product) return;
+
+    document.getElementById('modal-product-img').src = product.img;
+    document.getElementById('modal-product-category').innerText = product.category;
+    document.getElementById('modal-product-title').innerText = product.name;
+    document.getElementById('modal-product-desc').innerText = product.desc;
+    document.getElementById('modal-product-price').innerText = `R$ ${product.price.toFixed(2).replace('.', ',')}`;
+
+    const addBtn = document.getElementById('modal-product-add-btn');
+    addBtn.onclick = function() {
+        addToCart(product.id);
+        closeProductDetails();
+    };
+
+    const modal = document.getElementById('product-details-modal');
+    modal.style.display = 'flex';
+    document.body.classList.add('no-scroll');
+}
+
+function closeProductDetails() {
+    const modal = document.getElementById('product-details-modal');
+    modal.style.display = 'none';
+    
+    // Only remove no-scroll if cart is not open
+    if (!document.getElementById('cart-overlay').classList.contains('open')) {
+        document.body.classList.remove('no-scroll');
+    }
 }
 
 // --- My Orders Logic ---
