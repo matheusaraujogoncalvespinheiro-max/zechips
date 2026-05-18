@@ -42,7 +42,7 @@ function showView(viewId) {
     if(viewId === 'my-orders') renderMyOrders();
 }
 
-let currentCategory = 'Todos';
+let currentCategory = 'Porções';
 
 // --- Menu Functions ---
 function renderMenu() {
@@ -76,7 +76,6 @@ function filterCategory(cat) {
     btns.forEach(b => b.classList.remove('active'));
     
     const activeBtn = {
-        'Todos': 'btn-cat-todos',
         'Porções': 'btn-cat-porcoes',
         'Bebidas': 'btn-cat-bebidas',
         'Guloseimas': 'btn-cat-guloseimas'

@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let currentOrderFilter = 'active';
-let adminMenuFilter = 'Todos';
+let adminMenuFilter = 'Porções';
 let caixaCart = [];
 let adminPayMethod = 'Pix';
 let adminCurrentTotal = 0;
@@ -151,7 +151,6 @@ function setAdminMenuFilter(cat) {
     btns.forEach(b => b.classList.remove('active'));
     
     const activeBtn = {
-        'Todos': 'btn-admin-cat-todos',
         'Porções': 'btn-admin-cat-porcoes',
         'Bebidas': 'btn-admin-cat-bebidas',
         'Guloseimas': 'btn-admin-cat-guloseimas'
