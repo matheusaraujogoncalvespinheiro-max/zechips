@@ -362,16 +362,18 @@ function renderFinance() {
     const avgTicket = totalSalesCount > 0 ? (totalIn / totalSalesCount) : 0;
     const profitMargin = totalIn > 0 ? ((balance / totalIn) * 100) : 0;
 
+    const formatBRL = (val) => val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
     // Update UI
-    document.getElementById('finance-total-in').innerText = `R$ ${totalIn.toFixed(2).replace('.', ',')}`;
-    document.getElementById('finance-total-out').innerText = `R$ ${totalOut.toFixed(2).replace('.', ',')}`;
+    document.getElementById('finance-total-in').innerText = `R$ ${formatBRL(totalIn)}`;
+    document.getElementById('finance-total-out').innerText = `R$ ${formatBRL(totalOut)}`;
     
     const balanceEl = document.getElementById('finance-balance');
-    balanceEl.innerText = `R$ ${balance.toFixed(2).replace('.', ',')}`;
+    balanceEl.innerText = `R$ ${formatBRL(balance)}`;
     balanceEl.style.color = balance >= 0 ? '#4caf50' : 'var(--accent-red)';
     
-    document.getElementById('finance-margin').innerText = `${profitMargin.toFixed(1).replace('.', ',')}%`;
-    document.getElementById('finance-avg-ticket').innerText = `R$ ${avgTicket.toFixed(2).replace('.', ',')}`;
+    document.getElementById('finance-margin').innerText = `${profitMargin.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+    document.getElementById('finance-avg-ticket').innerText = `R$ ${formatBRL(avgTicket)}`;
     document.getElementById('finance-sales-count').innerText = totalSalesCount;
 
     if (transactions.length === 0) {
@@ -389,7 +391,7 @@ function renderFinance() {
             </td>
             <td>${t.desc}</td>
             <td style="font-weight: bold; color: ${t.type === 'in' ? '#4caf50' : 'var(--accent-red)'}">
-                ${t.type === 'in' ? '+' : '-'} R$ ${t.value.toFixed(2).replace('.', ',')}
+                ${t.type === 'in' ? '+' : '-'} R$ ${formatBRL(t.value)}
             </td>
             <td>
                 ${t.type === 'out' 
