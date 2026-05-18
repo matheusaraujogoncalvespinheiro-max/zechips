@@ -353,6 +353,20 @@ function toggleChangeField() {
     if (changeField) changeField.style.display = method === 'Dinheiro' ? 'block' : 'none';
 }
 
+function maskPhone(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+    
+    if (value.length > 2) {
+        value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    }
+    if (value.length > 10) {
+        value = `${value.slice(0, 10)}-${value.slice(10)}`;
+    }
+    
+    input.value = value;
+}
+
 // --- Order Placement ---
 function placeOrder() {
     const name = document.getElementById('customer-name').value;
