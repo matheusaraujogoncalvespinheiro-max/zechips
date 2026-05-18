@@ -21,6 +21,7 @@ let adminMenuFilter = 'Porções';
 let caixaCart = [];
 let adminPayMethod = 'Pix';
 let adminCurrentTotal = 0;
+let loadedCaixaOrderCode = null;
 
 function showAdminView(view) {
     const ordersView = document.getElementById('admin-orders-view');
@@ -394,6 +395,37 @@ function deleteExpense(id) {
 }
 
 // --- Caixa Rápido Logic ---
+function pullOrderToCaixa() {
+    const codeInput = document.getElementById('caixa-pull-code').value.trim();
+    if (!codeInput) return alert("Digite um código de pedido!");
+    
+    const code = codeInput.startsWith('#') ? codeInput.toUpperCase() : '#' + codeInput.toUpperCase();
+    const orders = getOrders();
+    const order = orders.find(o => o.code === code);
+
+    if (!order) return alert("Pedido não encontrado!");
+    if (order.status === 'Entregue') return alert("Este pedido já está finalizado (Entregue)!");
+    if (order.status === 'Cancelado') return alert("Este pedido está cancelado!");
+
+    // Load items
+    caixaCart = [...order.items];
+    loadedCaixaOrderCode = order.code;
+    
+    // Update UI
+    document.getElementById('loaded-order-badge').style.display = 'flex';
+    document.getElementById('loaded-order-code').innerText = order.code;
+    
+    renderCaixaCart();
+}
+
+function clearCaixa() {
+    loadedCaixaOrderCode = null;
+    caixaCart = [];
+    if(document.getElementById('caixa-pull-code')) document.getElementById('caixa-pull-code').value = '';
+    if(document.getElementById('loaded-order-badge')) document.getElementById('loaded-order-badge').style.display = 'none';
+    renderCaixaCart();
+}
+
 function renderCaixaMenu() {
     const container = document.getElementById('caixa-menu-list');
     const search = document.getElementById('caixa-search').value.toLowerCase();
@@ -484,29 +516,41 @@ function calcAdminChange() {
 function confirmAdminSale() {
     if (!adminPayMethod) return alert("Por favor, selecione uma forma de pagamento!");
 
-    // Create an order for history
-    const orderCode = '#CAIXA-' + Math.random().toString(36).substring(2, 5).toUpperCase();
     const orders = getOrders();
-    
     const changeVal = parseFloat(document.getElementById('admin-cash-received').value) || 0;
-    const newOrder = {
-        code: orderCode,
-        customer: "Caixa Rápido",
-        payment: adminPayMethod,
-        items: [...caixaCart],
-        total: adminCurrentTotal,
-        location: "Balcão",
-        table: "-",
-        change: adminPayMethod === 'Dinheiro' ? (changeVal - adminCurrentTotal) : null,
-        status: 'Entregue', // Sale completed
-        timestamp: new Date().getTime()
-    };
+
+    if (loadedCaixaOrderCode) {
+        // Update existing order
+        const orderIndex = orders.findIndex(o => o.code === loadedCaixaOrderCode);
+        if (orderIndex > -1) {
+            orders[orderIndex].status = 'Entregue';
+            orders[orderIndex].payment = adminPayMethod;
+            orders[orderIndex].change = adminPayMethod === 'Dinheiro' ? (changeVal - adminCurrentTotal) : null;
+            // Overwrite items in case they added/removed something at the counter
+            orders[orderIndex].items = [...caixaCart];
+            orders[orderIndex].total = adminCurrentTotal;
+        }
+    } else {
+        // Create new order for history
+        const orderCode = '#CAIXA-' + Math.random().toString(36).substring(2, 5).toUpperCase();
+        const newOrder = {
+            code: orderCode,
+            customer: "Caixa Rápido",
+            payment: adminPayMethod,
+            items: [...caixaCart],
+            total: adminCurrentTotal,
+            location: "Balcão",
+            table: "-",
+            change: adminPayMethod === 'Dinheiro' ? (changeVal - adminCurrentTotal) : null,
+            status: 'Entregue',
+            timestamp: new Date().getTime()
+        };
+        orders.push(newOrder);
+    }
     
-    orders.push(newOrder);
     saveOrders(orders);
     
-    alert("Venda realizada com sucesso!");
-    caixaCart = [];
-    renderCaixaCart();
+    alert("Venda finalizada com sucesso!");
+    clearCaixa();
     closeAdminPayment();
 }

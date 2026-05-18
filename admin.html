@@ -107,15 +107,25 @@
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
                 <div>
                     <h1>Caixa Rápido</h1>
+                    <div style="margin: 1.5rem 0; display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+                        <input type="text" id="caixa-pull-code" placeholder="Código do Pedido (Ex: #ABCD)" style="flex: 1; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white;">
+                        <button class="nav-btn active" onclick="pullOrderToCaixa()" style="padding: 1rem 1.5rem; border-radius: 12px; white-space: nowrap;">Puxar Pedido</button>
+                    </div>
                     <div style="margin: 1.5rem 0; display: flex; gap: 1rem;">
-                        <input type="text" id="caixa-search" placeholder="Pesquisar produto..." oninput="renderCaixaMenu()">
+                        <input type="text" id="caixa-search" placeholder="Pesquisar produto no balcão..." oninput="renderCaixaMenu()" style="width: 100%; padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: white;">
                     </div>
                     <div class="menu-grid" id="caixa-menu-list" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
                         <!-- Simplified cards for quick selection -->
                     </div>
                 </div>
-                <div style="background: var(--bg-card); padding: 2rem; border-radius: 24px; border: 1px solid var(--glass-border); height: fit-content;">
-                    <h2>Pedido Atual</h2>
+                <div style="background: var(--bg-card); padding: 2rem; border-radius: 24px; border: 1px solid var(--glass-border); height: fit-content; position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2>Pedido Atual</h2>
+                        <div id="loaded-order-badge" style="display: none; background: rgba(255, 152, 0, 0.2); color: #ff9800; padding: 0.3rem 0.8rem; border-radius: 8px; font-size: 0.8rem; font-weight: bold; align-items: center; gap: 0.5rem;">
+                            Fechando: <span id="loaded-order-code"></span>
+                            <button onclick="clearCaixa()" style="background: none; border: none; color: var(--accent-red); cursor: pointer; font-size: 1rem; margin-left: 0.5rem;">✕</button>
+                        </div>
+                    </div>
                     <div id="caixa-cart-items" style="margin: 1.5rem 0; max-height: 400px; overflow-y: auto;">
                         <!-- Caixa cart items -->
                     </div>
