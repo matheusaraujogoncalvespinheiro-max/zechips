@@ -472,11 +472,16 @@ function confirmAdminSale() {
     const orderCode = '#CAIXA-' + Math.random().toString(36).substring(2, 5).toUpperCase();
     const orders = getOrders();
     
+    const changeVal = parseFloat(document.getElementById('admin-cash-received').value) || 0;
     const newOrder = {
         code: orderCode,
         customer: "Caixa Rápido",
         payment: adminPayMethod,
         items: [...caixaCart],
+        total: adminCurrentTotal,
+        location: "Balcão",
+        table: "-",
+        change: adminPayMethod === 'Dinheiro' ? (changeVal - adminCurrentTotal) : null,
         status: 'Entregue', // Sale completed
         timestamp: new Date().getTime()
     };
