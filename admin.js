@@ -23,23 +23,34 @@ function showAdminView(view) {
     const ordersView = document.getElementById('admin-orders-view');
     const menuView = document.getElementById('admin-menu-view');
     const caixaView = document.getElementById('admin-caixa-view');
-    const btns = document.querySelectorAll('.nav-links > .nav-btn');
-    
+    const financeView = document.getElementById('admin-finance-view');
+
+    ordersView.style.display = 'none';
+    menuView.style.display = 'none';
+    caixaView.style.display = 'none';
+    if(financeView) financeView.style.display = 'none';
+
+    const btns = document.querySelectorAll('.nav-btn');
     btns.forEach(b => b.classList.remove('active'));
-    // Highlight the main nav btn
-    const mainBtns = document.querySelectorAll('header .nav-btn');
-    mainBtns.forEach(b => {
-        if(b.innerText.toLowerCase().includes(view)) b.classList.add('active');
-        else b.classList.remove('active');
-    });
 
-    ordersView.style.display = view === 'orders' ? 'block' : 'none';
-    menuView.style.display = view === 'menu-mgmt' ? 'block' : 'none';
-    caixaView.style.display = view === 'caixa' ? 'block' : 'none';
-
-    if (view === 'orders') renderAdminOrders();
-    if (view === 'menu-mgmt') renderAdminMenu();
-    if (view === 'caixa') renderCaixaMenu();
+    if (view === 'orders') {
+        ordersView.style.display = 'block';
+        btns[0].classList.add('active');
+        renderAdminOrders();
+    } else if (view === 'caixa') {
+        caixaView.style.display = 'block';
+        btns[1].classList.add('active');
+        renderCaixaMenu();
+        updateCaixaCart();
+    } else if (view === 'finance') {
+        if(financeView) financeView.style.display = 'block';
+        btns[2].classList.add('active');
+        renderFinance();
+    } else if (view === 'menu-mgmt') {
+        menuView.style.display = 'block';
+        btns[3].classList.add('active');
+        renderAdminMenu();
+    }
 }
 
 function setOrderFilter(filter) {
@@ -255,12 +266,121 @@ function saveProduct() {
     renderAdminMenu();
 }
 
-function deleteProduct(id) {
-    if (confirm("Deseja realmente excluir este produto?")) {
+function deleteMenuProduct(id) {
+    if(confirm('Tem certeza que deseja remover este produto?')) {
         let menu = getMenu();
-        menu = menu.filter(m => m.id !== id);
+        menu = menu.filter(p => p.id !== id);
         saveMenu(menu);
         renderAdminMenu();
+    }
+}
+
+// --- Financeiro (Relatório) ---
+function renderFinance() {
+    const orders = getOrders();
+    const expenses = getExpenses();
+    const tbody = document.getElementById('finance-history-body');
+
+    // Filter only "Entregue" (completed) orders as Income
+    const incomeOrders = orders.filter(o => o.status === 'Entregue' || o.status === 'Pronto' || o.payment === 'Pix'); // Considering paid/delivered
+    
+    // Create unified transaction list
+    const transactions = [];
+    
+    incomeOrders.forEach(o => {
+        transactions.push({
+            id: o.code,
+            date: o.timestamp,
+            type: 'in',
+            desc: `Venda Pedido ${o.code}`,
+            value: o.total
+        });
+    });
+
+    expenses.forEach(e => {
+        transactions.push({
+            id: e.id,
+            date: e.timestamp,
+            type: 'out',
+            desc: e.desc,
+            value: e.value
+        });
+    });
+
+    // Sort by newest first
+    transactions.sort((a, b) => b.date - a.date);
+
+    // Calculate totals
+    const totalIn = transactions.filter(t => t.type === 'in').reduce((acc, t) => acc + t.value, 0);
+    const totalOut = transactions.filter(t => t.type === 'out').reduce((acc, t) => acc + t.value, 0);
+    const balance = totalIn - totalOut;
+
+    // Update UI
+    document.getElementById('finance-total-in').innerText = `R$ ${totalIn.toFixed(2).replace('.', ',')}`;
+    document.getElementById('finance-total-out').innerText = `R$ ${totalOut.toFixed(2).replace('.', ',')}`;
+    
+    const balanceEl = document.getElementById('finance-balance');
+    balanceEl.innerText = `R$ ${balance.toFixed(2).replace('.', ',')}`;
+    balanceEl.style.color = balance >= 0 ? '#4caf50' : 'var(--accent-red)';
+
+    if (transactions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma transação registrada.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = transactions.map(t => `
+        <tr>
+            <td>${new Date(t.date).toLocaleString('pt-BR')}</td>
+            <td>
+                ${t.type === 'in' 
+                    ? `<span class="status-badge" style="background: rgba(76, 175, 80, 0.2); color: #4caf50;">Entrada</span>` 
+                    : `<span class="status-badge" style="background: rgba(244, 67, 54, 0.2); color: var(--accent-red);">Saída</span>`}
+            </td>
+            <td>${t.desc}</td>
+            <td style="font-weight: bold; color: ${t.type === 'in' ? '#4caf50' : 'var(--accent-red)'}">
+                ${t.type === 'in' ? '+' : '-'} R$ ${t.value.toFixed(2).replace('.', ',')}
+            </td>
+            <td>
+                ${t.type === 'out' 
+                    ? `<button class="action-btn" style="background: var(--accent-red);" onclick="deleteExpense('${t.id}')">Excluir</button>` 
+                    : '-'}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function addExpense() {
+    const desc = document.getElementById('expense-desc').value;
+    const val = parseFloat(document.getElementById('expense-val').value);
+
+    if (!desc || isNaN(val) || val <= 0) {
+        alert("Preencha a descrição e um valor válido maior que zero.");
+        return;
+    }
+
+    const expenses = getExpenses();
+    expenses.push({
+        id: 'exp_' + Date.now(),
+        desc: desc,
+        value: val,
+        timestamp: Date.now()
+    });
+
+    saveExpenses(expenses);
+    
+    // Clear inputs
+    document.getElementById('expense-desc').value = '';
+    document.getElementById('expense-val').value = '';
+    
+    renderFinance();
+}
+
+function deleteExpense(id) {
+    if(confirm("Tem certeza que deseja excluir esta despesa?")) {
+        let expenses = getExpenses();
+        expenses = expenses.filter(e => e.id !== id);
+        saveExpenses(expenses);
+        renderFinance();
     }
 }
 

@@ -95,3 +95,13 @@ function saveOrders(orders) {
     localStorage.setItem('ze_chips_orders', JSON.stringify(orders));
     window.dispatchEvent(new Event('storage'));
 }
+
+// --- Expenses ---
+function getExpenses() {
+    return JSON.parse(localStorage.getItem('ze_chips_expenses')) || [];
+}
+
+function saveExpenses(expenses) {
+    localStorage.setItem('ze_chips_expenses', JSON.stringify(expenses));
+    window.dispatchEvent(new Event('storage'));
+}
