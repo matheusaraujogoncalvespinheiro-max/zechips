@@ -10,6 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAdminOrders();
         updateStats();
         renderAdminMenu();
+        if (document.getElementById('admin-finance-view') && document.getElementById('admin-finance-view').style.display !== 'none') {
+            renderFinance();
+        }
     });
 });
 
@@ -445,7 +448,12 @@ function openAdminPayment() {
     
     document.getElementById('admin-pay-amount').innerText = `R$ ${adminCurrentTotal.toFixed(2).replace('.', ',')}`;
     document.getElementById('payment-modal-admin').style.right = "0";
-    setAdminPayMethod('Pix', document.querySelector('#payment-modal-admin .nav-btn'));
+    
+    // Force payment selection
+    adminPayMethod = null;
+    const btns = document.querySelectorAll('#payment-modal-admin .nav-btn');
+    btns.forEach(b => b.classList.remove('active'));
+    document.getElementById('admin-change-area').style.display = 'none';
 }
 
 function closeAdminPayment() {
@@ -468,6 +476,8 @@ function calcAdminChange() {
 }
 
 function confirmAdminSale() {
+    if (!adminPayMethod) return alert("Por favor, selecione uma forma de pagamento!");
+
     // Create an order for history
     const orderCode = '#CAIXA-' + Math.random().toString(36).substring(2, 5).toUpperCase();
     const orders = getOrders();
