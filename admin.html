@@ -144,20 +144,39 @@
         <div id="admin-finance-view" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h1>Relatório de Entradas e Saídas</h1>
+                <div class="nav-links" style="background: rgba(255,255,255,0.02); padding: 0.3rem;">
+                    <button class="nav-btn" id="btn-finance-hoje" onclick="setFinanceFilter('hoje')">Hoje</button>
+                    <button class="nav-btn active" id="btn-finance-mes" onclick="setFinanceFilter('mes')">Este Mês</button>
+                    <button class="nav-btn" id="btn-finance-tudo" onclick="setFinanceFilter('tudo')">Tudo</button>
+                </div>
             </div>
 
-            <div class="stats-grid">
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 2rem;">
+                <!-- Row 1 -->
                 <div class="stat-card" style="border-left: 4px solid #4caf50;">
-                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Entradas</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Faturamento Bruto</div>
                     <div class="stat-val" id="finance-total-in" style="color: #4caf50;">R$ 0,00</div>
                 </div>
                 <div class="stat-card" style="border-left: 4px solid var(--accent-red);">
-                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Saídas</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Despesas/Custos</div>
                     <div class="stat-val" id="finance-total-out" style="color: var(--accent-red);">R$ 0,00</div>
                 </div>
                 <div class="stat-card" style="background: rgba(255,191,0,0.1); border-left: 4px solid var(--primary);">
-                    <div style="font-size: 0.8rem; color: var(--primary); text-transform: uppercase;">Saldo Final</div>
+                    <div style="font-size: 0.8rem; color: var(--primary); text-transform: uppercase;">Lucro Líquido</div>
                     <div class="stat-val" id="finance-balance">R$ 0,00</div>
+                </div>
+                <!-- Row 2 -->
+                <div class="stat-card" style="border-left: 4px solid #2196f3;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Margem de Lucro</div>
+                    <div class="stat-val" id="finance-margin" style="color: #2196f3;">0%</div>
+                </div>
+                <div class="stat-card" style="border-left: 4px solid #9c27b0;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Ticket Médio</div>
+                    <div class="stat-val" id="finance-avg-ticket" style="color: #9c27b0;">R$ 0,00</div>
+                </div>
+                <div class="stat-card" style="border-left: 4px solid #00bcd4;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total de Vendas</div>
+                    <div class="stat-val" id="finance-sales-count" style="color: #00bcd4;">0</div>
                 </div>
             </div>
 

@@ -22,6 +22,7 @@ let caixaCart = [];
 let adminPayMethod = 'Pix';
 let adminCurrentTotal = 0;
 let loadedCaixaOrderCode = null;
+let financeTimeFilter = 'mes'; // 'hoje', 'mes', 'tudo'
 
 function showAdminView(view) {
     const ordersView = document.getElementById('admin-orders-view');
@@ -279,20 +280,51 @@ function deleteMenuProduct(id) {
     }
 }
 
-// --- Financeiro (Relatório) ---
+// --- Financeiro (Relatório Avançado) ---
+function setFinanceFilter(filter) {
+    financeTimeFilter = filter;
+    ['hoje', 'mes', 'tudo'].forEach(f => {
+        document.getElementById('btn-finance-' + f).classList.remove('active');
+    });
+    document.getElementById('btn-finance-' + filter).classList.add('active');
+    renderFinance();
+}
+
+function isWithinFinanceFilter(timestamp) {
+    if (financeTimeFilter === 'tudo') return true;
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    
+    if (financeTimeFilter === 'hoje') {
+        return date.getDate() === now.getDate() && 
+               date.getMonth() === now.getMonth() && 
+               date.getFullYear() === now.getFullYear();
+    }
+    
+    if (financeTimeFilter === 'mes') {
+        return date.getMonth() === now.getMonth() && 
+               date.getFullYear() === now.getFullYear();
+    }
+    return true;
+}
+
 function renderFinance() {
     const orders = getOrders();
     const expenses = getExpenses();
     const tbody = document.getElementById('finance-history-body');
 
-    // Filter only "Entregue" (completed) orders as Income
-    const incomeOrders = orders.filter(o => o.status === 'Entregue' || o.status === 'Pronto' || o.payment === 'Pix'); // Considering paid/delivered
+    // Filter only completed orders as Income
+    let incomeOrders = orders.filter(o => o.status === 'Entregue' || o.status === 'Pronto' || o.payment === 'Pix');
+    
+    // Apply time filters
+    incomeOrders = incomeOrders.filter(o => isWithinFinanceFilter(o.timestamp));
+    const filteredExpenses = expenses.filter(e => isWithinFinanceFilter(e.timestamp || e.date)); // Fallback to e.date if needed
     
     // Create unified transaction list
     const transactions = [];
     
     incomeOrders.forEach(o => {
-        // Fix for old orders that might not have a total saved
         let orderTotal = o.total;
         if (orderTotal === undefined || isNaN(orderTotal)) {
             orderTotal = o.items ? o.items.reduce((acc, i) => acc + ((i.price || 0) * (i.qty || 1)), 0) : 0;
@@ -307,10 +339,10 @@ function renderFinance() {
         });
     });
 
-    expenses.forEach(e => {
+    filteredExpenses.forEach(e => {
         transactions.push({
             id: e.id,
-            date: e.timestamp,
+            date: e.timestamp || e.date,
             type: 'out',
             desc: e.desc,
             value: e.value
@@ -324,6 +356,11 @@ function renderFinance() {
     const totalIn = transactions.filter(t => t.type === 'in').reduce((acc, t) => acc + t.value, 0);
     const totalOut = transactions.filter(t => t.type === 'out').reduce((acc, t) => acc + t.value, 0);
     const balance = totalIn - totalOut;
+    
+    // Advanced Metrics
+    const totalSalesCount = incomeOrders.length;
+    const avgTicket = totalSalesCount > 0 ? (totalIn / totalSalesCount) : 0;
+    const profitMargin = totalIn > 0 ? ((balance / totalIn) * 100) : 0;
 
     // Update UI
     document.getElementById('finance-total-in').innerText = `R$ ${totalIn.toFixed(2).replace('.', ',')}`;
@@ -332,6 +369,10 @@ function renderFinance() {
     const balanceEl = document.getElementById('finance-balance');
     balanceEl.innerText = `R$ ${balance.toFixed(2).replace('.', ',')}`;
     balanceEl.style.color = balance >= 0 ? '#4caf50' : 'var(--accent-red)';
+    
+    document.getElementById('finance-margin').innerText = `${profitMargin.toFixed(1).replace('.', ',')}%`;
+    document.getElementById('finance-avg-ticket').innerText = `R$ ${avgTicket.toFixed(2).replace('.', ',')}`;
+    document.getElementById('finance-sales-count').innerText = totalSalesCount;
 
     if (transactions.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhuma transação registrada.</td></tr>`;
