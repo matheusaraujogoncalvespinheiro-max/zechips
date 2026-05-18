@@ -424,26 +424,20 @@ function placeOrder() {
     overlay.style.display = 'flex';
     overlay.style.right = '0'; // Open the overlay
 
-    if (paymentMethod === 'Pix') {
-        pixArea.style.display = 'block';
-        successArea.style.display = 'none';
-        generatePixPayment(newOrder.total);
-        startPixTimer(600, orderCode); // 10 minutes
-    } else {
-        pixArea.style.display = 'none';
-        successArea.style.display = 'block';
-        
-        // Animate progress bar
-        setTimeout(() => {
-            progress.style.width = '0%';
-        }, 100);
+    // Always show standard success message
+    pixArea.style.display = 'none';
+    successArea.style.display = 'block';
+    
+    // Animate progress bar
+    setTimeout(() => {
+        progress.style.width = '0%';
+    }, 100);
 
-        // Auto Redirect after 10s
-        setTimeout(() => {
-            overlay.style.display = 'none';
-            showView('my-orders');
-        }, 10000);
-    }
+    // Auto Redirect after 10s
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        showView('my-orders');
+    }, 10000);
 }
 
 // --- Pix Helper Functions ---
