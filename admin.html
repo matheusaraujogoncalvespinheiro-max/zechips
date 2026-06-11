@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin | Ze Chips</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-container {
+            border-top: 4px solid var(--primary);
+            padding-top: 1rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--glass);
+            text-align: center;
+        }
+        .stat-val {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container admin-container">
+        <header>
+            <div class="logo">ZE CHIPS <span style="font-size: 0.8rem; vertical-align: middle; color: var(--text-muted);">ADMIN</span></div>
+            <nav class="nav-links">
+                <button class="nav-btn active" onclick="showAdminView('orders')">Pedidos</button>
+                <button class="nav-btn" onclick="showAdminView('caixa')">Caixa Rápido</button>
+                <button class="nav-btn" onclick="showAdminView('menu-mgmt')">Cardápio</button>
+                <button class="nav-btn" onclick="clearAllOrders()" style="border-color: var(--accent-red); color: var(--accent-red);">Limpar Tudo</button>
+            </nav>
+        </header>
+
+        <div id="admin-orders-view">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="total-orders">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Total Hoje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="pending-orders" style="color: #ff9800;">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Em Preparo</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="ready-orders" style="color: #4caf50;">0</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Prontos</div>
+                </div>
+            </div>
+
+            <section class="view active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h1>Gestão de Pedidos</h1>
+                    <div class="nav-links" style="background: rgba(255,255,255,0.02);">
+                        <button class="nav-btn active" id="btn-filter-active" onclick="setOrderFilter('active')">Ativos</button>
+                        <button class="nav-btn" id="btn-filter-history" onclick="setOrderFilter('history')">Histórico</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Cliente</th>
+                                <th>Itens</th>
+                                <th>Pagamento</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-orders-body">
+                            <!-- Admin rows will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <div id="admin-menu-view" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1>Gerenciar Cardápio</h1>
+                <div class="nav-links" style="background: rgba(255,255,255,0.02); padding: 0.3rem;">
+                    <button class="nav-btn active" id="btn-admin-cat-todos" onclick="setAdminMenuFilter('Todos')">Todos</button>
+                    <button class="nav-btn" id="btn-admin-cat-porcoes" onclick="setAdminMenuFilter('Porções')">Porções</button>
+                    <button class="nav-btn" id="btn-admin-cat-bebidas" onclick="setAdminMenuFilter('Bebidas')">Bebidas</button>
+                    <button class="nav-btn" id="btn-admin-cat-guloseimas" onclick="setAdminMenuFilter('Guloseimas')">Guloseimas</button>
+                </div>
+                <button class="add-btn" onclick="openProductModal()">+ Novo Produto</button>
+            </div>
+            
+            <div class="menu-grid" id="admin-menu-list">
+                <!-- Menu items for editing will be injected here -->
+            </div>
+        </div>
+
+        <div id="admin-caixa-view" style="display: none;">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                <div>
+                    <h1>Caixa Rápido</h1>
+                    <div style="margin: 1.5rem 0; display: flex; gap: 1rem;">
+                        <input type="text" id="caixa-search" placeholder="Pesquisar produto..." oninput="renderCaixaMenu()">
+                    </div>
+                    <div class="menu-grid" id="caixa-menu-list" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                        <!-- Simplified cards for quick selection -->
+                    </div>
+                </div>
+                <div style="background: var(--bg-card); padding: 2rem; border-radius: 24px; border: 1px solid var(--glass-border); height: fit-content;">
+                    <h2>Pedido Atual</h2>
+                    <div id="caixa-cart-items" style="margin: 1.5rem 0; max-height: 400px; overflow-y: auto;">
+                        <!-- Caixa cart items -->
+                    </div>
+                    <div style="border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem;">
+                            <span>Total:</span>
+                            <span id="caixa-total">R$ 0,00</span>
+                        </div>
+                        <button class="checkout-btn" onclick="openAdminPayment()">Finalizar Venda</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Admin Payment (Charge exact amount) -->
+    <div id="payment-modal-admin" class="cart-overlay" style="right: -500px; width: 500px;">
+        <div class="cart-header">
+            <h2>Processar Pagamento</h2>
+            <button class="nav-btn" onclick="closeAdminPayment()">Fechar</button>
+        </div>
+        <div class="cart-items">
+            <div style="background: var(--primary-glow); padding: 2rem; border-radius: 20px; text-align: center; margin-bottom: 2rem;">
+                <div style="font-size: 0.9rem; color: var(--primary);">VALOR A COBRAR</div>
+                <div style="font-size: 3rem; font-weight: 800; color: var(--primary);" id="admin-pay-amount">R$ 0,00</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Forma de Pagamento</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <button class="nav-btn active" onclick="setAdminPayMethod('Pix', this)">PIX</button>
+                    <button class="nav-btn" onclick="setAdminPayMethod('Cartão', this)">CARTÃO</button>
+                    <button class="nav-btn" onclick="setAdminPayMethod('Dinheiro', this)">DINHEIRO</button>
+                </div>
+            </div>
+
+            <div id="admin-change-area" style="display: none; margin-top: 2rem;">
+                <div class="form-group">
+                    <label>Valor Recebido</label>
+                    <input type="number" id="admin-cash-received" placeholder="0.00" oninput="calcAdminChange()">
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-size: 1.2rem;">
+                    <span>Troco:</span>
+                    <span id="admin-change-val" style="color: #ff9800; font-weight: 800;">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <button class="checkout-btn" onclick="confirmAdminSale()">Confirmar Recebimento</button>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing products -->
+    <div id="product-modal" class="cart-overlay" style="right: -450px; width: 450px;">
+        <div class="cart-header">
+            <h2 id="modal-title">Novo Produto</h2>
+            <button class="nav-btn" onclick="closeProductModal()">Fechar</button>
+        </div>
+        <div class="cart-items">
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <label>Nome da Porção</label>
+                <input type="text" id="prod-name" placeholder="Ex: Batata Frita">
+            </div>
+            <div class="form-group">
+                <label>Categoria</label>
+                <select id="prod-category" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 12px; color: white; outline: none;">
+                    <option value="Porções">Porções</option>
+                    <option value="Bebidas">Bebidas</option>
+                    <option value="Guloseimas">Guloseimas</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="prod-desc" placeholder="Ex: Porção de 500g...">
+            </div>
+            <div class="form-group">
+                <label>Preço (R$)</label>
+                <input type="number" step="0.01" id="prod-price" placeholder="Ex: 25.90">
+            </div>
+            <div class="form-group">
+                <label>URL da Imagem</label>
+                <input type="text" id="prod-img" placeholder="Cole o link da imagem">
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 1rem; margin-top: 1rem;">
+                <input type="checkbox" id="prod-active" style="width: 25px; height: 25px; cursor: pointer;">
+                <label style="margin-bottom: 0; cursor: pointer;" for="prod-active">Disponível no Cardápio</label>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <button class="checkout-btn" onclick="saveProduct()">Salvar Produto</button>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

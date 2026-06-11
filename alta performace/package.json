@@ -1,0 +1,14 @@
+{
+  "name": "alta-performance-dashboard",
+  "version": "1.0.0",
+  "description": "Controle Interno - Alta Performance",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-packager . AltaPerformance --platform=win32 --arch=x64 --overwrite --out=dist"
+  },
+  "devDependencies": {
+    "electron": "^42.3.2",
+    "electron-packager": "^17.1.2"
+  }
+}

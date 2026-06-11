@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ze Chips | Porções Gourmet</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">ZE CHIPS</div>
+            <nav class="nav-links">
+                <button class="nav-btn active" onclick="showView('menu')">Cardápio</button>
+                <button class="nav-btn" onclick="showView('my-orders')">Meus Pedidos</button>
+                <button class="nav-btn" onclick="showView('track')">Acompanhar</button>
+            </nav>
+        </header>
+
+        <!-- View: Cardápio -->
+        <section id="view-menu" class="view active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1>Nosso Cardápio</h1>
+                <div class="nav-links" style="background: rgba(255,255,255,0.02); padding: 0.3rem;">
+                    <button class="nav-btn active" id="btn-cat-todos" onclick="filterCategory('Todos')">Todos</button>
+                    <button class="nav-btn" id="btn-cat-porcoes" onclick="filterCategory('Porções')">Porções</button>
+                    <button class="nav-btn" id="btn-cat-bebidas" onclick="filterCategory('Bebidas')">Bebidas</button>
+                    <button class="nav-btn" id="btn-cat-guloseimas" onclick="filterCategory('Guloseimas')">Guloseimas</button>
+                </div>
+            </div>
+            <div class="menu-grid" id="menu-container">
+                <!-- Food cards will be injected here -->
+            </div>
+        </section>
+
+        <!-- View: Meus Pedidos -->
+        <section id="view-my-orders" class="view">
+            <h1>Meus Pedidos</h1>
+            <div id="my-orders-list" style="margin-top: 2rem;">
+                <!-- List of client's own orders will be injected here -->
+            </div>
+        </section>
+
+        <!-- View: Checkout -->
+        <section id="view-checkout" class="view">
+            <div class="status-card" style="max-width: 800px; text-align: left;">
+                <h1 style="margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">Confirmar Pedido</h1>
+                
+                <div id="checkout-summary" style="margin-bottom: 2rem;">
+                    <!-- Order summary will be injected here -->
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <div class="form-group">
+                            <label>Seu Nome</label>
+                            <input type="text" id="customer-name" placeholder="Como devemos te chamar?">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Pedido</label>
+                            <select id="order-type" onchange="toggleDeliveryFields()" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 1.2rem; border-radius: 16px; color: white; outline: none; cursor: pointer;">
+                                <option value="Retirada">Retirada no Balcão (Grátis)</option>
+                                <option value="Entrega">Entrega (Taxa variável)</option>
+                            </select>
+                        </div>
+
+                        <div id="delivery-fields" style="display: none; animation: slideIn 0.3s ease-out;">
+                            <div class="form-group">
+                                <label>Local da Entrega</label>
+                                <div style="background: rgba(255,152,0,0.1); border: 1px solid var(--primary); padding: 1.2rem; border-radius: 16px; color: var(--primary); font-weight: 800; display: flex; justify-content: space-between;">
+                                    <span>BAR DO GETULIO</span>
+                                    <span>+ R$ 5,00</span>
+                                </div>
+                                <input type="hidden" id="delivery-location" value="BAR DO GETULIO">
+                            </div>
+                            <div class="form-group">
+                                <label>Qual o número da Mesa?</label>
+                                <input type="text" id="table-number" placeholder="Ex: Mesa 05">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Forma de Pagamento</label>
+                            <select id="payment-method" onchange="toggleChangeField()" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 1.2rem; border-radius: 16px; color: white; outline: none; cursor: pointer;">
+                                <option value="Pix">Pix</option>
+                                <option value="Cartão">Cartão (Maquininha)</option>
+                                <option value="Dinheiro">Dinheiro</option>
+                            </select>
+                        </div>
+                        <div id="change-field" class="form-group" style="display: none;">
+                            <label>Troco para quanto?</label>
+                            <input type="number" id="payment-change" placeholder="Ex: 50.00">
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--glass); padding: 2rem; border-radius: 20px; border: 1px solid var(--glass-border);">
+                        <div style="display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem;">
+                            <span>Total:</span>
+                            <span id="checkout-total">R$ 0,00</span>
+                        </div>
+                        <button class="checkout-btn" style="margin-top: 0;" onclick="placeOrder()">Confirmar e Enviar</button>
+                        <button class="nav-btn" style="width: 100%; margin-top: 1rem; border: none;" onclick="showView('menu')">Voltar ao Cardápio</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Acompanhar Pedido -->
+...
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay">
+        <div class="cart-header">
+            <h2>Seu Carrinho</h2>
+            <button class="nav-btn" onclick="toggleCart()">Fechar</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Cart items injected here -->
+        </div>
+        <div class="cart-footer">
+            <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 800; margin: 1rem 0;">
+                <span>Total:</span>
+                <span id="cart-total">R$ 0,00</span>
+            </div>
+            <button class="checkout-btn" onclick="goToCheckout()">Ir para o Pagamento</button>
+        </div>
+    </div>
+
+    <div id="floating-cart-btn" onclick="toggleCart()">
+        <span style="font-size: 1.5rem;">🛒</span>
+        <div id="cart-count">0</div>
+    </div>
+
+    <!-- Success Overlay -->
+    <div id="success-overlay" class="cart-overlay" style="display: none; align-items: center; justify-content: center; text-align: center; background: rgba(0,0,0,0.95);">
+        <div class="status-card" style="max-width: 400px; animation: slideUp 0.5s ease-out;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+            <h2 style="color: var(--primary); margin-bottom: 1rem;">Pedido Confirmado!</h2>
+            <p style="font-size: 1.1rem; line-height: 1.6;">Seu pedido já está sendo feito a produção!</p>
+            <div id="success-order-code" style="font-size: 2.5rem; font-weight: 900; color: white; margin: 1.5rem 0; letter-spacing: 4px;">#----</div>
+            <p style="color: var(--text-muted); font-size: 0.8rem;">Você será redirecionado em instantes...</p>
+            
+            <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 2rem; border-radius: 2px; overflow: hidden;">
+                <div id="success-progress" style="width: 100%; height: 100%; background: var(--primary); transition: width 10s linear;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="app.js"></script>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="mobile-nav">
+        <button class="mobile-nav-btn active" id="m-btn-menu" onclick="showView('menu')">
+            <span>🍕</span>
+            Cardápio
+        </button>
+        <button class="mobile-nav-btn" id="m-btn-my-orders" onclick="showView('my-orders')">
+            <span>📋</span>
+            Pedidos
+        </button>
+        <button class="mobile-nav-btn" id="m-btn-track" onclick="showView('track')">
+            <span>🚚</span>
+            Status
+        </button>
+        <button class="mobile-nav-btn" id="m-btn-cart" onclick="toggleCart()" style="position: relative;">
+            <span>🛒</span>
+            Carrinho
+            <div id="cart-count-mobile" style="position: absolute; top: -5px; right: 5px; background: var(--primary); color: white; width: 16px; height: 16px; border-radius: 50%; font-size: 0.6rem; display: flex; align-items: center; justify-content: center; font-weight: 800;">0</div>
+        </button>
+    </div>
+</body>
+</html>

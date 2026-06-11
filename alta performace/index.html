@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alta Performance - Controle Interno</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i data-lucide="zap"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Alta Performance</h1>
+                    <span>Controle Interno</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-tab="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="stock">
+                    <i data-lucide="package"></i>
+                    <span>Estoque</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="sales">
+                    <i data-lucide="shopping-cart"></i>
+                    <span>Nova Venda</span>
+                </a>
+                <a href="#" class="menu-item" data-tab="reports">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Estatísticas</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">AP</div>
+                    <div class="user-info">
+                        <span class="user-name">Painel Admin</span>
+                        <span class="user-role">Operador</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-title">
+                    <h2 id="current-tab-title">Dashboard</h2>
+                    <p id="header-subtitle">Bem-vindo ao painel da Alta Performance.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="header-date">
+                        <i data-lucide="calendar"></i>
+                        <span id="live-date">--/--/----</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="switchTab('sales')">
+                        <i data-lucide="plus"></i>
+                        <span>Venda Rápida</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- TAB CONTENT CONTAINER -->
+            <div class="tab-content-wrapper">
+                
+                <!-- TAB: DASHBOARD -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <!-- Cards Grid -->
+                    <div class="stats-cards-grid">
+                        <div class="stat-card clickable" onclick="openRevenueDetailsModal()" title="Clique para ver detalhamento do faturamento">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Faturamento Total</span>
+                                <div class="stat-icon faturamento">
+                                    <i data-lucide="dollar-sign"></i>
+                                </div>
+                            </div>
+                            <h3 class="stat-value" id="card-revenue">R$ 0,00</h3>
+                            <p class="stat-desc">Faturamento bruto acumulado (Clique para detalhes)</p>
+                        </div>
+                        
+                        <div class="stat-card clickable" onclick="openProfitDetailsModal()" title="Clique para ver detalhamento do lucro">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Lucro Estimado</span>
+                                <div class="stat-icon lucro">
+                                    <i data-lucide="trending-up"></i>
+                                </div>
+                            </div>
+                            <h3 class="stat-value" id="card-profit">R$ 0,00</h3>
+                            <p class="stat-desc">Margem líquida de vendas (Clique para detalhes)</p>
+                        </div>
+
+                        <div class="stat-card clickable" onclick="openSalesCountDetailsModal()" title="Clique para ver detalhamento das vendas">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Vendas Realizadas</span>
+                                <div class="stat-icon vendas">
+                                    <i data-lucide="shopping-bag"></i>
+                                </div>
+                            </div>
+                            <h3 class="stat-value" id="card-sales-count">0</h3>
+                            <p class="stat-desc">Transações finalizadas (Clique para detalhes)</p>
+                        </div>
+
+                        <div class="stat-card clickable" onclick="openStockCountDetailsModal()" title="Clique para ver detalhamento do estoque">
+                            <div class="stat-card-header">
+                                <span class="stat-title">Total em Estoque</span>
+                                <div class="stat-icon estoque">
+                                    <i data-lucide="box"></i>
+                                </div>
+                            </div>
+                            <h3 class="stat-value" id="card-stock-count">0</h3>
+                            <p class="stat-desc">Total de itens e valor investido (Clique para detalhes)</p>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Graphs and Info -->
+                    <div class="dashboard-grid">
+                        <div class="grid-card chart-container">
+                            <div class="card-header">
+                                <h3>Faturamento Mensal</h3>
+                                <p>Volume de vendas ao longo do tempo</p>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="grid-card warnings-container">
+                            <div class="card-header">
+                                <h3>Estoque Crítico</h3>
+                                <p>Itens e tamanhos que precisam de reposição imediata</p>
+                            </div>
+                            <div class="warnings-list" id="low-stock-list">
+                                <!-- Dinamicamente preenchido -->
+                                <div class="empty-state">
+                                    <i data-lucide="check-circle-2"></i>
+                                    <p>Todos os calçados estão com estoque saudável!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: ESTOQUE (INVENTORY) -->
+                <section id="tab-stock" class="tab-pane">
+                    <div class="action-bar">
+                        <div class="search-box">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="stock-search" placeholder="Buscar calçado por nome, marca ou categoria...">
+                        </div>
+                        <div class="filter-actions">
+                            <select id="stock-category-filter" class="select-filter">
+                                <option value="">Todas as Categorias</option>
+                                <option value="Calçados">Calçados</option>
+                                <option value="Camisetas">Camisetas</option>
+                                <option value="Shorts / Calças">Shorts / Calças</option>
+                                <option value="Bolas">Bolas</option>
+                                <option value="Equipamentos / Outros">Equipamentos / Outros</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="openProductModal()">
+                                <i data-lucide="plus"></i>
+                                <span>Cadastrar Calçado</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stock Inventory Table -->
+                    <div class="stock-list-container">
+                        <div class="table-responsive">
+                            <table class="custom-table" id="stock-table">
+                                <thead>
+                                    <tr>
+                                        <th>Calçado / Marca</th>
+                                        <th>Categoria</th>
+                                        <th>Preço de Custo</th>
+                                        <th>Preço de Venda</th>
+                                        <th>Disponibilidade por Tamanho</th>
+                                        <th>Total Pares</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stock-table-body">
+                                    <!-- Dinamicamente preenchido -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: NOVA VENDA (POS SIMULATOR) -->
+                <section id="tab-sales" class="tab-pane">
+                    <div class="sales-simulator-container">
+                        <!-- Selecionador de Item -->
+                        <div class="sales-panel-left">
+                            <div class="grid-card">
+                                <div class="card-header">
+                                    <h3>Selecionar Calçado</h3>
+                                    <p>Selecione o modelo e tamanho para adicionar ao carrinho</p>
+                                </div>
+                                <div class="sales-search-box">
+                                    <div class="search-box">
+                                        <i data-lucide="search"></i>
+                                        <input type="text" id="sale-product-search" placeholder="Digite o nome do tênis...">
+                                    </div>
+                                </div>
+                                <div class="sales-products-grid" id="sales-products-grid">
+                                    <!-- Cards dos calçados disponíveis para venda -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Carrinho e Fechamento -->
+                        <div class="sales-panel-right">
+                            <div class="grid-card cart-card">
+                                <div class="card-header">
+                                    <h3>Carrinho de Vendas</h3>
+                                    <div class="cart-items-count"><span id="cart-count">0</span> itens</div>
+                                </div>
+                                
+                                <div class="cart-list" id="cart-list">
+                                    <!-- Dinamicamente preenchido -->
+                                    <div class="cart-empty">
+                                        <i data-lucide="shopping-bag"></i>
+                                        <p>Selecione um produto ao lado para iniciar a venda.</p>
+                                    </div>
+                                </div>
+
+                                <div class="cart-summary">
+                                    <div class="summary-row">
+                                        <span>Subtotal</span>
+                                        <span id="cart-subtotal">R$ 0,00</span>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Desconto (R$)</span>
+                                        <input type="number" id="cart-discount" class="discount-input" value="0" min="0" oninput="updateCartTotals()">
+                                    </div>
+                                    <div class="summary-row select-payment">
+                                        <span>Pagamento</span>
+                                        <select id="cart-payment-method" class="payment-select">
+                                            <option value="Pix">Pix</option>
+                                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                            <option value="Cartão de Débito">Cartão de Débito</option>
+                                            <option value="Dinheiro">Dinheiro</option>
+                                        </select>
+                                    </div>
+                                    <div class="summary-row total-row">
+                                        <span>Total Geral</span>
+                                        <span id="cart-total">R$ 0,00</span>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-success btn-block" id="btn-checkout" onclick="checkoutSale()" disabled>
+                                    <i data-lucide="check"></i>
+                                    <span>Finalizar Venda</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: ESTATÍSTICAS (REPORTS) -->
+                <section id="tab-reports" class="tab-pane">
+                    <div class="reports-grid">
+                        <div class="grid-card">
+                            <div class="card-header">
+                                <h3>Modelos Mais Vendidos</h3>
+                                <p>Ranking dos calçados com maior saída</p>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="topProductsChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="grid-card">
+                            <div class="card-header">
+                                <h3>Distribuição por Tamanho</h3>
+                                <p>Volume de vendas por numeração de calçado</p>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="sizeChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Ajuste de Taxas da Maquininha -->
+                        <div class="grid-card">
+                            <div class="card-header">
+                                <h3>Taxas da Maquininha</h3>
+                                <p>Ajuste as taxas percentuais cobradas por método de pagamento</p>
+                            </div>
+                            <form id="fees-config-form" onsubmit="saveFeesConfig(event)" style="display:flex; flex-direction:column; gap:16px;">
+                                <div class="form-row" style="margin-bottom:0;">
+                                    <div class="form-group col-6">
+                                        <label for="fee-pix">Taxa Pix (%)</label>
+                                        <input type="number" id="fee-pix" step="0.01" min="0" max="100" value="0.99" required>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="fee-debit">Cartão de Débito (%)</label>
+                                        <input type="number" id="fee-debit" step="0.01" min="0" max="100" value="1.99" required>
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-bottom:0;">
+                                    <div class="form-group col-6">
+                                        <label for="fee-credit">Cartão de Crédito (%)</label>
+                                        <input type="number" id="fee-credit" step="0.01" min="0" max="100" value="3.99" required>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label for="fee-cash">Dinheiro (%)</label>
+                                        <input type="number" id="fee-cash" step="0.01" min="0" max="100" value="0.00" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="align-self: flex-start; margin-top: 10px;">
+                                    <i data-lucide="save"></i>
+                                    <span>Salvar Taxas</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Card 4: Detalhamento Financeiro -->
+                        <div class="grid-card">
+                            <div class="card-header">
+                                <h3>Detalhamento Financeiro</h3>
+                                <p>Resumo de receitas, despesas e margem líquida</p>
+                            </div>
+                            <div class="finance-summary-list" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                                <div class="finance-row" style="display:flex; justify-content:space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                    <span style="color:var(--text-secondary); font-size: 0.9rem;">Faturamento Bruto:</span>
+                                    <strong id="fin-gross" style="color:#ffffff;">R$ 0,00</strong>
+                                </div>
+                                <div class="finance-row" style="display:flex; justify-content:space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                    <span style="color:var(--text-secondary); font-size: 0.9rem;">Custos de Aquisição:</span>
+                                    <strong id="fin-cost" style="color:var(--danger);">R$ 0,00</strong>
+                                </div>
+                                <div class="finance-row" style="display:flex; justify-content:space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                    <span style="color:var(--text-secondary); font-size: 0.9rem;">Taxas da Maquininha (Despesa):</span>
+                                    <strong id="fin-fees" style="color:var(--warning);">R$ 0,00</strong>
+                                </div>
+                                <div class="finance-row" style="display:flex; justify-content:space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                                    <span style="color:var(--text-secondary); font-size: 0.9rem;">Descontos Concedidos:</span>
+                                    <strong id="fin-discounts" style="color:var(--info);">R$ 0,00</strong>
+                                </div>
+                                <div class="finance-row" style="display:flex; justify-content:space-between; padding-top: 4px;">
+                                    <span style="font-weight: 700; color:#ffffff; font-size: 0.95rem;">Lucro Líquido Real:</span>
+                                    <strong id="fin-net" style="color:var(--primary); font-size:1.2rem;">R$ 0,00</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid-card full-width-card">
+                            <div class="card-header">
+                                <h3>Histórico de Transações Recentes</h3>
+                                <p>Registro cronológico das vendas efetuadas</p>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="custom-table" id="sales-history-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Data / Hora</th>
+                                            <th>Produtos</th>
+                                            <th>Pagamento (Taxa)</th>
+                                            <th>Desconto</th>
+                                            <th>Valor Total</th>
+                                            <th>Lucro Líquido</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sales-history-body">
+                                        <!-- Dinamicamente preenchido -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: CADASTRAR/EDITAR PRODUTO -->
+    <div class="modal-overlay" id="product-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Novo Calçado</h3>
+                <button class="btn-close" onclick="closeProductModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="product-form" onsubmit="saveProduct(event)">
+                <input type="hidden" id="prod-id">
+                <div class="modal-body">
+                    <!-- Informações Básicas -->
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="prod-code">Código (Ref/SKU)</label>
+                            <input type="text" id="prod-code" placeholder="Ex: NK-PEG40" required>
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="prod-name">Nome do Produto</label>
+                            <input type="text" id="prod-name" placeholder="Ex: Bola Penalty Campo" required>
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="prod-brand">Marca</label>
+                            <input type="text" id="prod-brand" placeholder="Ex: Nike" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-12">
+                            <label for="prod-type-preset">Tipo de Produto</label>
+                            <select id="prod-type-preset" onchange="applyProductTypePreset()" required>
+                                <option value="" disabled selected>Selecione o tipo de produto...</option>
+                                <option value="tenis">Tênis / Calçados</option>
+                                <option value="camiseta">Camisetas</option>
+                                <option value="shorts">Shorts / Calças</option>
+                                <option value="bolas">Bolas</option>
+                                <option value="meias">Meias</option>
+                                <option value="luvas">Luvas / Equipamentos / Acessórios</option>
+                                <option value="outro">Outro (Personalizado)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row" id="custom-category-row" style="display: none;">
+                        <div class="form-group col-6">
+                            <label for="prod-category">Categoria</label>
+                            <select id="prod-category" required>
+                                <option value="Calçados">Calçados</option>
+                                <option value="Camisetas">Camisetas</option>
+                                <option value="Shorts / Calças">Shorts / Calças</option>
+                                <option value="Bolas">Bolas</option>
+                                <option value="Equipamentos / Outros">Equipamentos / Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="prod-size-type">Grade de Tamanhos</label>
+                            <select id="prod-size-type" onchange="toggleSizeGradeInputs()" required>
+                                <option value="Calçados">Calçados (34 a 44)</option>
+                                <option value="Roupas">Vestuário (PP a XG)</option>
+                                <option value="Único">Tamanho Único / Sem Grade (U)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="prod-cost">Preço de Custo (R$)</label>
+                            <input type="number" id="prod-cost" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="prod-price">Preço de Venda (R$)</label>
+                            <input type="number" id="prod-price" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <!-- Grade de Tamanhos Dinâmica -->
+                    <div class="sizes-section">
+                        <h4>Quantidade em Estoque</h4>
+                        <p class="sizes-help-text">Insira a quantidade disponível para cada variação da grade:</p>
+                        
+                        <!-- 1. Grade Calçados (34 a 44) -->
+                        <div id="size-grade-shoes-container" class="sizes-inputs-grid">
+                            <div class="size-input-item">
+                                <label for="size-34">T34</label>
+                                <input type="number" id="size-34" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-35">T35</label>
+                                <input type="number" id="size-35" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-36">T36</label>
+                                <input type="number" id="size-36" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-37">T37</label>
+                                <input type="number" id="size-37" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-38">T38</label>
+                                <input type="number" id="size-38" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-39">T39</label>
+                                <input type="number" id="size-39" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-40">T40</label>
+                                <input type="number" id="size-40" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-41">T41</label>
+                                <input type="number" id="size-41" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-42">T42</label>
+                                <input type="number" id="size-42" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-43">T43</label>
+                                <input type="number" id="size-43" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-44">T44</label>
+                                <input type="number" id="size-44" class="size-qty-input shoe-size-input" min="0" value="0">
+                            </div>
+                        </div>
+
+                        <!-- 2. Grade Vestuário (PP a XG) -->
+                        <div id="size-grade-clothes-container" class="sizes-inputs-grid" style="display:none;">
+                            <div class="size-input-item">
+                                <label for="size-PP">PP</label>
+                                <input type="number" id="size-PP" class="size-qty-input cloth-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-P">P</label>
+                                <input type="number" id="size-P" class="size-qty-input cloth-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-M">M</label>
+                                <input type="number" id="size-M" class="size-qty-input cloth-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-G">G</label>
+                                <input type="number" id="size-G" class="size-qty-input cloth-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-GG">GG</label>
+                                <input type="number" id="size-GG" class="size-qty-input cloth-size-input" min="0" value="0">
+                            </div>
+                            <div class="size-input-item">
+                                <label for="size-XG">XG</label>
+                                <input type="number" id="size-XG" class="size-qty-input cloth-size-input" min="0" value="0">
+                            </div>
+                        </div>
+
+                        <!-- 3. Tamanho Único (U) -->
+                        <div id="size-grade-unique-container" class="sizes-inputs-grid" style="display:none;">
+                            <div class="size-input-item" style="grid-column: span 6; display: flex; flex-direction: column; align-items: center;">
+                                <label for="size-U">Quantidade Única (U)</label>
+                                <input type="number" id="size-U" class="size-qty-input unique-size-input" min="0" value="0" style="width: 100px; font-size: 1.1rem; padding: 6px;">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeProductModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALHES DE ESTOQUE / ADIÇÃO RÁPIDA -->
+    <div class="modal-overlay" id="quick-stock-modal">
+        <div class="modal-card modal-sm">
+            <div class="modal-header">
+                <h3>Ajuste Rápido de Estoque</h3>
+                <button class="btn-close" onclick="closeQuickStockModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="quick-stock-product-name" style="font-weight:600; margin-bottom: 5px; color: var(--text-color);"></p>
+                <p id="quick-stock-product-brand" style="font-size:0.875rem; color: var(--text-muted); margin-bottom: 20px;"></p>
+                
+                <div class="form-group">
+                    <label for="quick-stock-size">Tamanho a Ajustar</label>
+                    <select id="quick-stock-size" onchange="updateQuickStockCurrentQty()"></select>
+                </div>
+                
+                <div class="form-row" style="margin-top: 15px;">
+                    <div class="form-group col-6">
+                        <label>Estoque Atual</label>
+                        <input type="text" id="quick-stock-current" readonly class="readonly-input">
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="quick-stock-new">Novo Estoque</label>
+                        <input type="number" id="quick-stock-new" min="0" value="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeQuickStockModal()">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="saveQuickStock()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALHAMENTO DE FATURAMENTO -->
+    <div class="modal-overlay" id="revenue-detail-modal">
+        <div class="modal-card modal-lg" style="max-width: 850px;">
+            <div class="modal-header">
+                <h3>Detalhamento de Faturamento</h3>
+                <button class="btn-close" onclick="closeRevenueDetailsModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding-right: 8px;">
+                <!-- Cards de Resumo Rápido no Modal -->
+                <div class="stats-cards-grid" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Faturamento Bruto</span>
+                        <h4 id="rev-modal-gross" style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Descontos / Taxas (Despesas)</span>
+                        <h4 id="rev-modal-expenses" style="font-size: 1.35rem; font-weight: 700; color: var(--danger); margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Lucro Líquido Real</span>
+                        <h4 id="rev-modal-net" style="font-size: 1.35rem; font-weight: 700; color: var(--primary); margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                </div>
+
+                <!-- Detalhamento por Forma de Pagamento -->
+                <div class="grid-card" style="margin-bottom: 24px; padding: 16px;">
+                    <h4 style="font-size: 1rem; margin-bottom: 12px; color: #ffffff;">Faturamento por Forma de Pagamento</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Forma de Pagamento</th>
+                                    <th>Qtd Vendas</th>
+                                    <th>Faturamento Bruto</th>
+                                    <th>Taxas Aplicadas</th>
+                                    <th>Lucro Líquido</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rev-modal-payment-body">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Histórico de Itens Vendidos (Lista Detalhada) -->
+                <div class="grid-card" style="padding: 16px;">
+                    <h4 style="font-size: 1rem; margin-bottom: 12px; color: #ffffff;">Itens Vendidos no Período</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Ref / Código</th>
+                                    <th>Produto / Marca</th>
+                                    <th>Tamanho</th>
+                                    <th>Qtd</th>
+                                    <th>Preço Un.</th>
+                                    <th>Valor Total</th>
+                                    <th>Lucro Un.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rev-modal-items-body">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeRevenueDetailsModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALHAMENTO DE LUCRO -->
+    <div class="modal-overlay" id="profit-detail-modal">
+        <div class="modal-card modal-lg" style="max-width: 850px;">
+            <div class="modal-header">
+                <h3>Detalhamento de Lucro Estimado</h3>
+                <button class="btn-close" onclick="closeProfitDetailsModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding-right: 8px;">
+                <!-- Cards de Resumo de Lucro -->
+                <div class="stats-cards-grid" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Faturamento Líquido (Bandeiras Pagas)</span>
+                        <h4 id="prof-modal-net-rev" style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Custo dos Produtos Vendidos (CPV)</span>
+                        <h4 id="prof-modal-cost" style="font-size: 1.35rem; font-weight: 700; color: var(--danger); margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Lucro Líquido Real</span>
+                        <h4 id="prof-modal-net-profit" style="font-size: 1.35rem; font-weight: 700; color: var(--primary); margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                </div>
+
+                <!-- Detalhamento de Lucro por Categoria -->
+                <div class="grid-card" style="margin-bottom: 24px; padding: 16px;">
+                    <h4 style="font-size: 1rem; margin-bottom: 12px; color: #ffffff;">Lucro e Margem por Categoria</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Categoria</th>
+                                    <th>Qtd Itens Vendidos</th>
+                                    <th>Faturamento Bruto</th>
+                                    <th>Custo Total</th>
+                                    <th>Lucro Gerado</th>
+                                    <th>Margem Média (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prof-modal-category-body">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Ranking de Produtos com Maior Margem de Lucro Unitária -->
+                <div class="grid-card" style="padding: 16px;">
+                    <h4 style="font-size: 1rem; margin-bottom: 12px; color: #ffffff;">Ranking de Produtos com Maior Margem de Lucro (Unitária)</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Ref / Código</th>
+                                    <th>Produto / Marca</th>
+                                    <th>Preço de Custo</th>
+                                    <th>Preço de Venda</th>
+                                    <th>Margem R$ (Un.)</th>
+                                    <th>Margem % (Un.)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prof-modal-rank-body">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeProfitDetailsModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALHAMENTO DE VENDAS -->
+    <div class="modal-overlay" id="sales-count-detail-modal">
+        <div class="modal-card modal-lg" style="max-width: 850px;">
+            <div class="modal-header">
+                <h3>Detalhamento de Vendas Realizadas</h3>
+                <button class="btn-close" onclick="closeSalesCountDetailsModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding-right: 8px;">
+                <!-- Cards de Resumo de Vendas -->
+                <div class="stats-cards-grid" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Total Transações</span>
+                        <h4 id="sales-modal-count" style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-top: 4px;">0</h4>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Ticket Médio</span>
+                        <h4 id="sales-modal-ticket" style="font-size: 1.35rem; font-weight: 700; color: var(--primary); margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Total Itens Vendidos</span>
+                        <h4 id="sales-modal-items-total" style="font-size: 1.35rem; font-weight: 700; color: var(--info); margin-top: 4px;">0</h4>
+                    </div>
+                </div>
+
+                <!-- Histórico Detalhado de Transações -->
+                <div class="grid-card" style="padding: 16px;">
+                    <h4 style="font-size: 1rem; margin-bottom: 12px; color: #ffffff;">Log de Transações Efetuadas</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Data / Hora</th>
+                                    <th>Código Venda</th>
+                                    <th>Produtos</th>
+                                    <th>Forma Pag.</th>
+                                    <th>Total Geral</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-modal-history-body">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeSalesCountDetailsModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALHAMENTO DE ESTOQUE -->
+    <div class="modal-overlay" id="stock-count-detail-modal">
+        <div class="modal-card modal-lg" style="max-width: 850px;">
+            <div class="modal-header">
+                <h3>Detalhamento de Estoque</h3>
+                <button class="btn-close" onclick="closeStockCountDetailsModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding-right: 8px;">
+                <!-- Cards de Resumo do Estoque -->
+                <div class="stats-cards-grid" style="grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Total Itens em Estoque</span>
+                        <h4 id="stock-modal-qty" style="font-size: 1.35rem; font-weight: 700; color: #ffffff; margin-top: 4px;">0</h4>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Valor Investido (Preço Custo)</span>
+                        <h4 id="stock-modal-cost-valuation" style="font-size: 1.35rem; font-weight: 700; color: var(--danger); margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                    <div class="stat-card" style="padding: 16px; pointer-events: none; border-color: var(--border-color);">
+                        <span class="stat-title" style="font-size:0.8rem;">Faturamento Estimado (Venda)</span>
+                        <h4 id="stock-modal-sale-valuation" style="font-size: 1.35rem; font-weight: 700; color: var(--primary); margin-top: 4px;">R$ 0,00</h4>
+                    </div>
+                </div>
+
+                <!-- Detalhamento de Estoque por Categoria -->
+                <div class="grid-card" style="margin-bottom: 24px; padding: 16px;">
+                    <h4 style="font-size: 1rem; margin-bottom: 12px; color: #ffffff;">Valores de Estoque por Categoria</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Categoria</th>
+                                    <th>Total de Modelos</th>
+                                    <th>Unidades em Estoque</th>
+                                    <th>Valor Investido (Custo)</th>
+                                    <th>Faturamento Potencial</th>
+                                    <th>Lucro Estimado Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-modal-category-body">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Alertas de Estoque Crítico (0 ou 1 unidade) -->
+                <div class="grid-card" style="padding: 16px;">
+                    <h4 style="font-size: 1rem; margin-bottom: 12px; color: #ffffff;">Alertas de Estoque Crítico</h4>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Ref / Código</th>
+                                    <th>Produto / Marca</th>
+                                    <th>Tamanho</th>
+                                    <th>Quantidade</th>
+                                    <th>Ajustar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-modal-critical-body">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeStockCountDetailsModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Link -->
+    <script src="app.js"></script>
+</body>
+</html>
