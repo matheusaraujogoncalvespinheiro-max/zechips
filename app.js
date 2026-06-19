@@ -59,26 +59,48 @@ function renderMenu() {
             <div style="grid-column: 1/-1; text-align: center; padding: 5rem 2rem; background: var(--bg-card); border-radius: 20px; border: 1px dashed var(--glass-border);">
                 <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;">🍽️</div>
                 <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Cardápio Vazio</h3>
-                <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 400px; margin: 0 auto;">Nenhuma porção ou bebida cadastrada no momento. Entre no Painel do Administrador para adicionar produtos!</p>
+                <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 400px; margin: 0 auto;">Nenhum produto cadastrado nesta categoria no momento.</p>
             </div>
         `;
         return;
     }
     
-    container.innerHTML = filteredMenu.map(item => `
-        <div class="food-card">
-            <img src="${item.img}" alt="${item.name}" class="food-img">
-            <div class="food-content">
-                <div style="font-size: 0.7rem; color: var(--primary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.3rem;">${item.category}</div>
-                <h3 class="food-title">${item.name}</h3>
-                <p class="food-desc">${item.desc}</p>
-                <div class="food-footer">
+    container.innerHTML = filteredMenu.map(item => {
+        const hasStock = item.stock !== undefined && item.stock !== null && item.stock !== "";
+        const stockVal = hasStock ? parseInt(item.stock) : Infinity;
+        const outOfStock = hasStock && stockVal <= 0;
+        
+        let footerContent = "";
+        if (outOfStock) {
+            footerContent = `
+                <span class="price">R$ ${item.price.toFixed(2).replace('.', ',')}</span>
+                <span style="background: rgba(255, 76, 76, 0.1); color: var(--accent-red); padding: 0.5rem 1rem; border-radius: 12px; font-weight: 800; font-size: 0.8rem; border: 1px solid rgba(255, 76, 76, 0.2);">ESGOTADO</span>
+            `;
+        } else {
+            const stockBadge = hasStock ? `<span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 0.2rem;">Disponível: ${item.stock}</span>` : '';
+            footerContent = `
+                <div>
                     <span class="price">R$ ${item.price.toFixed(2).replace('.', ',')}</span>
-                    <button class="add-btn" onclick="addToCart(${item.id})">Adicionar</button>
+                    ${stockBadge}
+                </div>
+                <button class="add-btn" onclick="addToCart(${item.id})">Adicionar</button>
+            `;
+        }
+
+        return `
+            <div class="food-card" style="${outOfStock ? 'opacity: 0.75;' : ''}">
+                <img src="${item.img}" alt="${item.name}" class="food-img" style="${outOfStock ? 'filter: grayscale(80%);' : ''}">
+                <div class="food-content">
+                    <div style="font-size: 0.7rem; color: var(--primary); text-transform: uppercase; font-weight: 800; margin-bottom: 0.3rem;">${item.category || 'Sem Cat.'}</div>
+                    <h3 class="food-title">${item.name}</h3>
+                    <p class="food-desc">${item.desc}</p>
+                    <div class="food-footer">
+                        ${footerContent}
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function filterCategory(cat) {
@@ -90,7 +112,8 @@ function filterCategory(cat) {
         'Todos': 'btn-cat-todos',
         'Porções': 'btn-cat-porcoes',
         'Bebidas': 'btn-cat-bebidas',
-        'Guloseimas': 'btn-cat-guloseimas'
+        'Guloseimas': 'btn-cat-guloseimas',
+        'Combos': 'btn-cat-combos'
     }[cat];
     
     document.getElementById(activeBtn).classList.add('active');
@@ -152,7 +175,18 @@ function toggleCart() {
 function addToCart(id) {
     const menu = getMenu();
     const product = menu.find(p => p.id === id);
+    if (!product) return;
+
+    const hasStock = product.stock !== undefined && product.stock !== null && product.stock !== "";
+    const stockVal = hasStock ? parseInt(product.stock) : Infinity;
+    
     const inCart = cart.find(item => item.id === id);
+    const currentQtyInCart = inCart ? inCart.qty : 0;
+
+    if (hasStock && currentQtyInCart >= stockVal) {
+        alert(`Desculpe, só existem ${stockVal} unidades deste item disponíveis.`);
+        return;
+    }
 
     if (inCart) {
         inCart.qty++;
@@ -210,6 +244,16 @@ function renderCart() {
 function changeQty(id, delta) {
     const item = cart.find(i => i.id === id);
     if (item) {
+        if (delta > 0) {
+            const menu = getMenu();
+            const product = menu.find(p => p.id === id);
+            const hasStock = product && product.stock !== undefined && product.stock !== null && product.stock !== "";
+            const stockVal = hasStock ? parseInt(product.stock) : Infinity;
+            if (hasStock && item.qty >= stockVal) {
+                alert(`Desculpe, só existem ${stockVal} unidades deste item disponíveis.`);
+                return;
+            }
+        }
         item.qty += delta;
         if (item.qty <= 0) {
             removeFromCart(id);
@@ -291,6 +335,39 @@ function placeOrder() {
     if (!name) return alert("Por favor, digite seu nome!");
     if (orderType === 'Entrega' && !table) return alert("Por favor, informe a mesa ou complemento!");
     
+    // Validate stock before placing the order
+    const menu = getMenu();
+    let stockError = false;
+    let errorItemName = "";
+
+    for (const cartItem of cart) {
+        const menuItem = menu.find(p => p.id === cartItem.id);
+        if (menuItem && menuItem.stock !== undefined && menuItem.stock !== null && menuItem.stock !== "") {
+            const currentStock = parseInt(menuItem.stock);
+            if (!isNaN(currentStock) && currentStock < cartItem.qty) {
+                stockError = true;
+                errorItemName = menuItem.name;
+                break;
+            }
+        }
+    }
+
+    if (stockError) {
+        return alert(`Desculpe, o item "${errorItemName}" não possui estoque suficiente disponível.`);
+    }
+
+    // Decrement stock
+    for (const cartItem of cart) {
+        const menuItem = menu.find(p => p.id === cartItem.id);
+        if (menuItem && menuItem.stock !== undefined && menuItem.stock !== null && menuItem.stock !== "") {
+            const currentStock = parseInt(menuItem.stock);
+            if (!isNaN(currentStock)) {
+                menuItem.stock = Math.max(0, currentStock - cartItem.qty);
+            }
+        }
+    }
+    saveMenu(menu);
+
     const orderCode = '#' + Math.random().toString(36).substring(2, 6).toUpperCase();
     
     const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);

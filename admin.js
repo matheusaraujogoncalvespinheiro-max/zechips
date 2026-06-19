@@ -132,7 +132,8 @@ function setAdminMenuFilter(cat) {
         'Todos': 'btn-admin-cat-todos',
         'Porções': 'btn-admin-cat-porcoes',
         'Bebidas': 'btn-admin-cat-bebidas',
-        'Guloseimas': 'btn-admin-cat-guloseimas'
+        'Guloseimas': 'btn-admin-cat-guloseimas',
+        'Combos': 'btn-admin-cat-combos'
     }[cat];
     
     document.getElementById(activeBtn).classList.add('active');
@@ -174,6 +175,9 @@ function renderAdminMenu() {
                     </span>
                 </div>
                 <p class="food-desc">${item.desc}</p>
+                <div style="font-size: 0.75rem; margin-bottom: 0.8rem; color: var(--text-muted);">
+                    Estoque: <strong style="color: ${item.stock !== undefined && item.stock !== '' && item.stock <= 0 ? 'var(--accent-red)' : 'var(--primary)'}">${item.stock !== undefined && item.stock !== '' ? item.stock : 'Ilimitado'}</strong>
+                </div>
                 <div class="food-footer">
                     <span class="price">R$ ${item.price.toFixed(2).replace('.', ',')}</span>
                     <div>
@@ -201,6 +205,7 @@ function openProductModal(id = null) {
         document.getElementById('prod-price').value = item.price;
         document.getElementById('prod-img').value = item.img;
         document.getElementById('prod-active').checked = item.active !== false;
+        document.getElementById('prod-stock').value = item.stock !== undefined ? item.stock : "";
     } else {
         title.innerText = "Novo Produto";
         document.getElementById('edit-id').value = "";
@@ -210,6 +215,7 @@ function openProductModal(id = null) {
         document.getElementById('prod-price').value = "";
         document.getElementById('prod-img').value = "";
         document.getElementById('prod-active').checked = true;
+        document.getElementById('prod-stock').value = "";
     }
     
     modal.style.right = "0";
@@ -227,6 +233,8 @@ function saveProduct() {
     const price = parseFloat(document.getElementById('prod-price').value);
     const img = document.getElementById('prod-img').value || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800";
     const active = document.getElementById('prod-active').checked;
+    const stockInput = document.getElementById('prod-stock').value;
+    const stock = stockInput !== "" ? parseInt(stockInput) : "";
 
     if (!name || !price) return alert("Nome e preço são obrigatórios!");
 
@@ -234,10 +242,10 @@ function saveProduct() {
     
     if (id) {
         const index = menu.findIndex(m => m.id == id);
-        menu[index] = { id: parseInt(id), name, category, desc, price, img, active };
+        menu[index] = { id: parseInt(id), name, category, desc, price, img, active, stock };
     } else {
         const newId = menu.length > 0 ? Math.max(...menu.map(m => m.id)) + 1 : 1;
-        menu.push({ id: newId, name, category, desc, price, img, active });
+        menu.push({ id: newId, name, category, desc, price, img, active, stock });
     }
 
     saveMenu(menu);
@@ -265,19 +273,41 @@ function renderCaixaMenu() {
         item.category.toLowerCase().includes(search)
     );
 
-    container.innerHTML = filtered.map(item => `
-        <div class="food-card" onclick="addToCaixa(${item.id})" style="cursor: pointer; padding: 1rem;">
-            <div style="font-weight: 800; font-size: 0.9rem;">${item.name}</div>
-            <div style="color: var(--primary); font-weight: 800;">R$ ${item.price.toFixed(2).replace('.', ',')}</div>
-        </div>
-    `).join('');
+    container.innerHTML = filtered.map(item => {
+        const hasStock = item.stock !== undefined && item.stock !== null && item.stock !== "";
+        const stockVal = hasStock ? parseInt(item.stock) : Infinity;
+        const outOfStock = hasStock && stockVal <= 0;
+        
+        let stockText = "";
+        if (hasStock) {
+            stockText = outOfStock ? " (ESGOTADO)" : ` (Estoque: ${item.stock})`;
+        }
+
+        return `
+            <div class="food-card" ${outOfStock ? 'style="opacity: 0.5; pointer-events: none;"' : `onclick="addToCaixa(${item.id})"`} style="cursor: pointer; padding: 1rem;">
+                <div style="font-weight: 800; font-size: 0.9rem;">${item.name}${stockText}</div>
+                <div style="color: var(--primary); font-weight: 800;">R$ ${item.price.toFixed(2).replace('.', ',')}</div>
+            </div>
+        `;
+    }).join('');
 }
 
 function addToCaixa(id) {
     const menu = getMenu();
     const item = menu.find(m => m.id === id);
+    if (!item) return;
+
+    const hasStock = item.stock !== undefined && item.stock !== null && item.stock !== "";
+    const stockVal = hasStock ? parseInt(item.stock) : Infinity;
+
     const inCart = caixaCart.find(c => c.id === id);
-    
+    const currentQtyInCart = inCart ? inCart.qty : 0;
+
+    if (hasStock && currentQtyInCart >= stockVal) {
+        alert(`Desculpe, só existem ${stockVal} unidades deste item disponíveis no estoque.`);
+        return;
+    }
+
     if (inCart) inCart.qty++;
     else caixaCart.push({ ...item, qty: 1 });
     
@@ -338,6 +368,39 @@ function calcAdminChange() {
 }
 
 function confirmAdminSale() {
+    // Validate stock before confirming sale
+    const menu = getMenu();
+    let stockError = false;
+    let errorItemName = "";
+
+    for (const cartItem of caixaCart) {
+        const menuItem = menu.find(p => p.id === cartItem.id);
+        if (menuItem && menuItem.stock !== undefined && menuItem.stock !== null && menuItem.stock !== "") {
+            const currentStock = parseInt(menuItem.stock);
+            if (!isNaN(currentStock) && currentStock < cartItem.qty) {
+                stockError = true;
+                errorItemName = menuItem.name;
+                break;
+            }
+        }
+    }
+
+    if (stockError) {
+        return alert(`Desculpe, o item "${errorItemName}" não tem estoque suficiente disponível.`);
+    }
+
+    // Decrement stock
+    for (const cartItem of caixaCart) {
+        const menuItem = menu.find(p => p.id === cartItem.id);
+        if (menuItem && menuItem.stock !== undefined && menuItem.stock !== null && menuItem.stock !== "") {
+            const currentStock = parseInt(menuItem.stock);
+            if (!isNaN(currentStock)) {
+                menuItem.stock = Math.max(0, currentStock - cartItem.qty);
+            }
+        }
+    }
+    saveMenu(menu);
+
     // Create an order for history
     const orderCode = '#CAIXA-' + Math.random().toString(36).substring(2, 5).toUpperCase();
     const orders = getOrders();
