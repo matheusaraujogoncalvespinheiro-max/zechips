@@ -5,18 +5,32 @@ let myOrderCodes = JSON.parse(localStorage.getItem('ze_chips_my_codes')) || [];
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-    renderMenu();
     updateCartCount();
     
-    // Listen for storage changes (updates from admin)
-    window.addEventListener('storage', () => {
-        renderMyOrders();
-        // If we are currently tracking, refresh the status
-        const codeInput = document.getElementById('track-code-input');
-        if(codeInput && document.getElementById('track-display-area').style.display === 'block') {
-            trackOrder(codeInput.value);
-        }
-    });
+    // Check if redirecting from feedback page to show a specific view
+    const lastView = localStorage.getItem('ze_chips_last_view');
+    if (lastView) {
+        showView(lastView);
+        localStorage.removeItem('ze_chips_last_view');
+    }
+
+    // Listen for real-time updates from Firestore/shared cache
+    if (typeof onMenuUpdate !== 'undefined') {
+        onMenuUpdate(() => {
+            renderMenu();
+        });
+    }
+    
+    if (typeof onOrdersUpdate !== 'undefined') {
+        onOrdersUpdate(() => {
+            renderMyOrders();
+            // If we are currently tracking, refresh the status
+            const codeInput = document.getElementById('track-code-input');
+            if(codeInput && document.getElementById('track-display-area').style.display === 'block') {
+                trackOrder(codeInput.value);
+            }
+        });
+    }
 });
 
 // --- View Navigation ---
@@ -138,6 +152,13 @@ function renderMyOrders() {
 
     container.innerHTML = myOrders.reverse().map(order => {
         const total = order.items.reduce((acc, i) => acc + (i.price * i.qty), 0);
+        const isPendingPayment = order.status === 'Aguardando Pagamento';
+        const payBtn = isPendingPayment ? `
+            <button class="checkout-btn" style="margin-top: 0.8rem; background: #009ee3; width: 100%; border: none; font-size: 0.85rem; padding: 0.8rem;" onclick="event.stopPropagation(); retryPayment('${order.code}')">
+                💳 Pagar Agora com Mercado Pago
+            </button>
+        ` : '';
+
         return `
             <div class="food-card" style="margin-bottom: 1.5rem; padding: 1.8rem; cursor: pointer; transition: var(--transition);" onclick="quickTrack('${order.code}')">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
@@ -145,7 +166,7 @@ function renderMyOrders() {
                         <div style="font-weight: 800; color: var(--primary); font-size: 1.4rem; letter-spacing: 2px;">${order.code}</div>
                         <div style="font-size: 0.85rem; color: var(--text-muted);">${new Date(order.timestamp).toLocaleString('pt-BR')}</div>
                     </div>
-                    <span class="status-badge status-${order.status.toLowerCase()}">${order.status}</span>
+                    <span class="status-badge status-${order.status.replace(/ /g, '-').toLowerCase()}">${order.status}</span>
                 </div>
                 
                 <div style="border-top: 1px solid var(--glass-border); padding-top: 1rem; margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
@@ -156,6 +177,7 @@ function renderMyOrders() {
                         R$ ${total.toFixed(2).replace('.', ',')}
                     </div>
                 </div>
+                ${payBtn}
             </div>
         `;
     }).join('');
@@ -384,7 +406,8 @@ function placeOrder() {
         change: paymentMethod === 'Dinheiro' ? changeFor : null,
         items: [...cart],
         total: subtotal + fee,
-        status: 'Recebido',
+        status: paymentMethod === 'Online' ? 'Aguardando Pagamento' : 'Recebido',
+        paid: false,
         timestamp: new Date().getTime()
     };
 
@@ -398,26 +421,66 @@ function placeOrder() {
     cart = [];
     updateCartCount();
     renderCart();
-    
-    // Show Success Message
-    const overlay = document.getElementById('success-overlay');
-    const codeDisplay = document.getElementById('success-order-code');
-    const progress = document.getElementById('success-progress');
-    
-    codeDisplay.innerText = orderCode;
-    overlay.style.display = 'flex';
-    overlay.style.right = '0'; // Open the overlay
-    
-    // Animate progress bar
-    setTimeout(() => {
-        progress.style.width = '0%';
-    }, 100);
 
-    // Auto Redirect after 10s
-    setTimeout(() => {
-        overlay.style.display = 'none';
-        showView('my-orders');
-    }, 10000);
+    if (paymentMethod === 'Online') {
+        const functionsUrl = (typeof firebaseConfig !== 'undefined' && firebaseConfig.functionsUrl) 
+            || (typeof firebaseConfig !== 'undefined' && firebaseConfig.projectId ? `https://us-central1-${firebaseConfig.projectId}.cloudfunctions.net` : '');
+        
+        if (!functionsUrl) {
+            alert("Pedido salvo! Porém, a URL do Cloud Functions não está configurada no firebase-config.js. Fale com o atendente.");
+            showView('my-orders');
+            return;
+        }
+
+        alert("Redirecionando para a tela de pagamento seguro do Mercado Pago...");
+
+        fetch(`${functionsUrl}/createPreference`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                order: newOrder
+            })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Erro de rede ao criar preferencia");
+            return res.json();
+        })
+        .then(data => {
+            if (data.init_point) {
+                window.location.href = data.init_point;
+            } else {
+                alert("Erro ao obter link de pagamento do Mercado Pago.");
+                showView('my-orders');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Erro ao conectar ao Mercado Pago. Você pode tentar pagar novamente no menu 'Meus Pedidos'.");
+            showView('my-orders');
+        });
+    } else {
+        // Show Success Message
+        const overlay = document.getElementById('success-overlay');
+        const codeDisplay = document.getElementById('success-order-code');
+        const progress = document.getElementById('success-progress');
+        
+        codeDisplay.innerText = orderCode;
+        overlay.style.display = 'flex';
+        overlay.style.right = '0'; // Open the overlay
+        
+        // Animate progress bar
+        setTimeout(() => {
+            progress.style.width = '0%';
+        }, 100);
+
+        // Auto Redirect after 10s
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            showView('my-orders');
+        }, 10000);
+    }
 }
 
 // --- Tracking Logic ---
@@ -493,4 +556,44 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+
+function retryPayment(code) {
+    const orders = getOrders();
+    const order = orders.find(o => o.code === code);
+    if (!order) return alert("Pedido não encontrado!");
+
+    const functionsUrl = (typeof firebaseConfig !== 'undefined' && firebaseConfig.functionsUrl) 
+        || (typeof firebaseConfig !== 'undefined' && firebaseConfig.projectId ? `https://us-central1-${firebaseConfig.projectId}.cloudfunctions.net` : '');
+    
+    if (!functionsUrl) {
+        return alert("Erro: URL do Cloud Functions não configurada.");
+    }
+
+    alert("Redirecionando para o Mercado Pago...");
+
+    fetch(`${functionsUrl}/createPreference`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            order: order
+        })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Erro de rede");
+        return res.json();
+    })
+    .then(data => {
+        if (data.init_point) {
+            window.location.href = data.init_point;
+        } else {
+            alert("Não foi possível carregar a tela de pagamento.");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Erro ao conectar ao Mercado Pago.");
+    });
+}
 

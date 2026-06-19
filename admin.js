@@ -1,16 +1,20 @@
 // --- Admin Logic for Ze Chips ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    renderAdminOrders();
-    updateStats();
-    renderAdminMenu();
+    // Listen for real-time updates from Firestore/shared cache
+    if (typeof onMenuUpdate !== 'undefined') {
+        onMenuUpdate(() => {
+            renderAdminMenu();
+            renderCaixaMenu();
+        });
+    }
     
-    // Listen for storage changes
-    window.addEventListener('storage', () => {
-        renderAdminOrders();
-        updateStats();
-        renderAdminMenu();
-    });
+    if (typeof onOrdersUpdate !== 'undefined') {
+        onOrdersUpdate(() => {
+            renderAdminOrders();
+            updateStats();
+        });
+    }
 });
 
 let currentOrderFilter = 'active';
@@ -95,13 +99,20 @@ function renderAdminOrders() {
 }
 
 function updateStatus(code, newStatus) {
-    const orders = getOrders();
-    const order = orders.find(o => o.code === code);
-    if (order) {
-        order.status = newStatus;
-        saveOrders(orders);
-        renderAdminOrders();
-        updateStats();
+    if (window.db) {
+        window.db.collection('orders').doc(code).update({
+            status: newStatus
+        })
+        .catch(err => console.error("Erro ao atualizar status:", err));
+    } else {
+        const orders = getOrders();
+        const order = orders.find(o => o.code === code);
+        if (order) {
+            order.status = newStatus;
+            saveOrders(orders);
+            renderAdminOrders();
+            updateStats();
+        }
     }
 }
 
@@ -118,8 +129,20 @@ function updateStats() {
 
 function clearAllOrders() {
     if(confirm("Deseja realmente limpar todo o histórico de pedidos?")) {
-        localStorage.removeItem('ze_chips_orders');
-        window.dispatchEvent(new Event('storage'));
+        if (window.db) {
+            window.db.collection('orders').get().then((querySnapshot) => {
+                const batch = window.db.batch();
+                querySnapshot.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                return batch.commit();
+            })
+            .then(() => alert("Histórico de pedidos limpo!"))
+            .catch(err => console.error("Erro ao limpar pedidos:", err));
+        } else {
+            localStorage.removeItem('ze_chips_orders');
+            window.dispatchEvent(new Event('storage'));
+        }
     }
 }
 
@@ -255,10 +278,15 @@ function saveProduct() {
 
 function deleteProduct(id) {
     if (confirm("Deseja realmente excluir este produto?")) {
-        let menu = getMenu();
-        menu = menu.filter(m => m.id !== id);
-        saveMenu(menu);
-        renderAdminMenu();
+        if (window.db) {
+            window.db.collection('menu').doc(String(id)).delete()
+                .catch(err => console.error("Erro ao excluir produto do Firestore:", err));
+        } else {
+            let menu = getMenu();
+            menu = menu.filter(m => m.id !== id);
+            saveMenu(menu);
+            renderAdminMenu();
+        }
     }
 }
 

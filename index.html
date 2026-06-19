@@ -83,8 +83,9 @@
                         <div class="form-group">
                             <label>Forma de Pagamento</label>
                             <select id="payment-method" onchange="toggleChangeField()" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); padding: 1.2rem; border-radius: 16px; color: white; outline: none; cursor: pointer;">
-                                <option value="Pix">Pix</option>
-                                <option value="Cartão">Cartão (Maquininha)</option>
+                                <option value="Online">Pagar Online (Mercado Pago - Pix/Cartão)</option>
+                                <option value="Pix">Pix na Entrega/Balcão</option>
+                                <option value="Cartão">Cartão (Maquininha na Entrega)</option>
                                 <option value="Dinheiro">Dinheiro</option>
                             </select>
                         </div>
@@ -145,6 +146,13 @@
             </div>
         </div>
     </div>
+
+    <!-- Firebase SDK (Compat version for Vanilla JS) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
 
     <script src="shared.js"></script>
     <script src="app.js"></script>
