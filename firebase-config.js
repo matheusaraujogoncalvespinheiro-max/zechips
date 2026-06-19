@@ -1,10 +1,10 @@
-// Cole aqui as suas credenciais do Firebase Web App obtidas no Console do Firebase.
-// Vá em Configurações do Projeto > Geral > Seus aplicativos > Adicionar aplicativo > Web.
+// Credenciais do Firebase Web App obtidas no Console do Firebase.
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_AUTH_DOMAIN",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_STORAGE_BUCKET",
-  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyBJdGpU_mEcRxm5s5_qJrWrBRtBBm9abkM",
+  authDomain: "chipandchip-cc76f.firebaseapp.com",
+  projectId: "chipandchip-cc76f",
+  storageBucket: "chipandchip-cc76f.firebasestorage.app",
+  messagingSenderId: "925864479785",
+  appId: "1:925864479785:web:c2e8b827fc0d2cbe49a038",
+  measurementId: "G-9RV55KN1S4"
 };
