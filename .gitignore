@@ -11,3 +11,8 @@ dist/
 alta performace/dist/
 *.exe
 *.zip
+
+# Functions and Secrets
+.env
+functions/.env
+functions/node_modules/
