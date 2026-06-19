@@ -391,3 +391,29 @@ function resetTrack() {
     document.getElementById('track-display-area').style.display = 'none';
     document.getElementById('track-input-area').style.display = 'block';
 }
+
+// Shortcut to go to Admin page (type 'zdkk' sequentially)
+let adminSequence = '';
+document.addEventListener('keydown', (e) => {
+    // Avoid triggering when user is typing in form inputs
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+        return;
+    }
+    
+    const key = e.key.toLowerCase();
+    
+    // Append character if it's a single character
+    if (key.length === 1) {
+        adminSequence += key;
+        // Keep only the last 4 characters
+        if (adminSequence.length > 4) {
+            adminSequence = adminSequence.slice(-4);
+        }
+        
+        // If the sequence matches 'zdkk', redirect to admin.html
+        if (adminSequence === 'zdkk') {
+            window.location.href = 'admin.html';
+        }
+    }
+});
+
