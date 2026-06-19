@@ -30,8 +30,19 @@ exports.createPreference = functions.https.onRequest((req, res) => {
                 return res.status(500).json({ error: 'Token do Mercado Pago não configurado no servidor (.env).' });
             }
 
-            const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
             const projectId = process.env.GCLOUD_PROJECT;
+            
+            // Detecta a URL base dinamicamente (origin/referer) para funcionar localmente e em produção
+            const origin = req.headers.origin || req.headers.referer;
+            let baseUrl = process.env.BASE_URL;
+            if (!baseUrl || baseUrl.includes('localhost')) {
+                if (origin) {
+                    baseUrl = origin.replace(/\/$/, "");
+                } else {
+                    baseUrl = projectId ? `https://${projectId}.web.app` : 'http://localhost:3000';
+                }
+            }
+
             // O webhook aponta para a nossa função mpWebhook
             const webhookUrl = process.env.WEBHOOK_URL || `https://us-central1-${projectId}.cloudfunctions.net/mpWebhook`;
 
