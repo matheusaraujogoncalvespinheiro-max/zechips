@@ -16,3 +16,4 @@ alta performace/dist/
 .env
 functions/.env
 functions/node_modules/
+key.json
